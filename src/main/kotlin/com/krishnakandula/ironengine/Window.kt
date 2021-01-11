@@ -9,7 +9,7 @@ import org.lwjgl.system.MemoryUtil
 
 class Window(width: Int, height: Int, title: String) {
 
-    private val windowId: Long
+    val windowId: Long
 
     init {
         GLFW.glfwInit()
@@ -31,9 +31,6 @@ class Window(width: Int, height: Int, title: String) {
         }
 
         GL11.glViewport(0, 0, width, height)
-        GLFW.glfwSetFramebufferSizeCallback(windowId) { _, width, height ->
-            GL11.glViewport(0, 0, height * width / height, height)
-        }
     }
 
     fun getDimensions(): Vec2 {
@@ -60,11 +57,23 @@ class Window(width: Int, height: Int, title: String) {
 
     fun shouldClose(): Boolean = GLFW.glfwWindowShouldClose(windowId)
 
+    fun setFrameBufferSizeCallback(callback: (window: Long, width: Int, height: Int) -> Unit) {
+        GLFW.glfwSetFramebufferSizeCallback(windowId, callback)
+    }
+
+    fun setKeyCallback(callback: (window: Long, key: Int, scancode: Int, action: Int, mods: Int) -> Unit) {
+        GLFW.glfwSetKeyCallback(windowId, callback)
+    }
+
     fun swapBuffers() {
         GLFW.glfwSwapBuffers(windowId)
     }
 
     fun pollEvents() {
         GLFW.glfwPollEvents()
+    }
+
+    fun close() {
+        GLFW.glfwSetWindowShouldClose(windowId, true)
     }
 }
