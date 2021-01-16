@@ -9,7 +9,7 @@ abstract class Camera(
     var projection: Matrix4f
 ) {
 
-    abstract fun update()
+    abstract fun updateView()
 
     abstract fun onWindowSizeUpdated(windowWidth: Int, windowHeight: Int)
 

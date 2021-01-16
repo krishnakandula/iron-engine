@@ -9,8 +9,7 @@ class OrthographicCamera(
     transform: Transform,
     view: Matrix4f,
     projection: Matrix4f,
-    val widthRatio: Float,
-    val heightRatio: Float,
+    val pixelToWorldRatio: Float,
     val near: Float,
     val far: Float
 ) : Camera(transform, view, projection) {
@@ -23,56 +22,56 @@ class OrthographicCamera(
         fun new(
             screenWidth: Float,
             screenHeight: Float,
-            width: Float,
-            height: Float,
+            pixelToWorldRatio: Float, // how many pixels are in 1 world unit
             near: Float,
             far: Float
         ): OrthographicCamera {
 
-            val right = width / 2f
+            val cameraWidth = screenWidth / pixelToWorldRatio
+            val cameraHeight = screenHeight / pixelToWorldRatio
+
+            val right = cameraWidth / 2f
             val left = -right
-            val top = height / 2f
+            val top = cameraHeight / 2f
             val bottom = -top
 
             val projectionMatrix = Matrix4f().ortho(left, right, bottom, top, near, far)
-            val widthRatio = width / screenWidth
-            val heightRatio = height / screenHeight
-
 
             val transform = Transform(position = Vector3f(0f), rotation = Vector3f(0f), scale = Vector3f(1f))
 
-            return OrthographicCamera(
+            val camera = OrthographicCamera(
                 transform = transform,
                 view = Matrix4f(),
                 projection = projectionMatrix,
-                widthRatio = widthRatio,
-                heightRatio = heightRatio,
                 near = near,
-                far = far
+                far = far,
+                pixelToWorldRatio = pixelToWorldRatio
             )
+            camera.updateView()
+
+            return camera
         }
     }
 
-    override fun update() {
-        super.view.lookAt(
-            super.transform.position.clone(),
+    override fun updateView() {
+        super.view.setLookAt(
+            super.transform.position,
             super.transform.position.clone().add(DIRECTION),
-            WORLD_UP.clone()
+            WORLD_UP
         )
     }
 
     override fun onWindowSizeUpdated(windowWidth: Int, windowHeight: Int) {
-        val ratio = windowWidth.toFloat() / windowHeight.toFloat()
-        println(ratio)
-        val cameraWidth = windowWidth.toFloat() * widthRatio
-        val cameraHeight = windowHeight.toFloat() * heightRatio
+        val cameraWidth = windowWidth.toFloat() / pixelToWorldRatio
+        val cameraHeight = windowHeight.toFloat() / pixelToWorldRatio
 
-
-        val right = windowWidth / 2f
-        val left = -right
-        val top = windowHeight / 2f
-        val bottom = -top
-
-        super.projection.identity().ortho(-10.0f * ratio,10.0f * ratio, -10f, 10f, near, far)
+        super.projection.setOrtho(
+            -cameraWidth / 2f,
+            cameraWidth / 2f,
+            -cameraHeight / 2f,
+            cameraHeight / 2f,
+            near,
+            far
+        )
     }
 }

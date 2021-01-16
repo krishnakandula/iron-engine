@@ -12,7 +12,6 @@ import org.joml.Math
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.lwjgl.glfw.GLFW
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.GL_LINES
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
 import org.lwjgl.opengl.GL11.GL_UNSIGNED_INT
@@ -49,12 +48,10 @@ class Game {
 
     class BoidScene(private val window: Window) : Scene {
 
-        private val cameraSpeed = 2f
-        private var worldWidth = 20f
-        private var worldHeight = 20f
+        private val cameraSpeed = 10f
+        private val worldWidth = 30f
+        private val worldHeight = 30f
         private val maxSpeed = 5f
-        private var prevWidth = window.getDimensions().x
-        private var prevHeight = window.getDimensions().y
 
         val triangleVertices = floatArrayOf(
             -0.5f, -0.5f, 0.0f,
@@ -71,7 +68,7 @@ class Game {
         )
         val lineIndices = intArrayOf(0, 1)
 
-        val camera = OrthographicCamera.new(1600f, 1600f, 20f, 20f, 0f, 10f)
+        val camera = OrthographicCamera.new(1600f, 1600f, 100f, 0f, 10f)
         val boidMesh = Mesh(triangleVertices, triangleIndices, 3, 3)
         val lineMesh = Mesh(lineVertices, lineIndices, 3, 3)
         val shader = Shader(
@@ -86,7 +83,7 @@ class Game {
 
             shader.setMat4("view", camera.view)
             shader.setMat4("projection", camera.projection)
-            boids = List(10000) {
+            boids = List(10) {
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 
@@ -108,7 +105,7 @@ class Game {
         }
 
         override fun update(deltaTime: Double) {
-            println(1.0 / deltaTime)
+//            println(1.0 / deltaTime)
             boidMesh.bind()
             boids.forEach { boid ->
                 shader.setMat4("model", boid.model)
@@ -164,25 +161,16 @@ class Game {
             }
 
             if (cameraTransformDirty) {
-                camera.update()
+                println(camera.transform.position)
+                camera.updateView()
                 shader.setMat4("view", camera.view)
             }
         }
 
         override fun onWindowSizeUpdated(width: Int, height: Int) {
             camera.onWindowSizeUpdated(width, height)
-            camera.update()
+            camera.updateView()
             shader.setMat4("projection", camera.projection)
-
-            // update world width
-            val widthRatio = width.toFloat() / prevWidth
-            val heightRatio = height.toFloat() / prevHeight
-
-            worldWidth *= widthRatio
-            worldHeight *= heightRatio
-
-            prevWidth = width.toFloat()
-            prevHeight = height.toFloat()
         }
 
         override fun onKeyEvent(key: Int, action: Int): Boolean {
@@ -196,13 +184,7 @@ class Game {
         sceneManager.push(BoidScene(window))
 
         while (!window.shouldClose()) {
-            GL11.glClearColor(1f, 1f, 0f, 1f)
-            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
-
             sceneManager.update()
-
-            window.swapBuffers()
-            window.pollEvents()
         }
     }
 }
