@@ -5,7 +5,8 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11.glViewport
 
 class SceneManager(private val updateDepth: Byte,
-                   private val window: Window) {
+                   private val window: Window
+) {
 
     private val scenes: ArrayDeque<Scene> = ArrayDeque()
     private val fixedUpdateInterval = 1.0 / 100.0

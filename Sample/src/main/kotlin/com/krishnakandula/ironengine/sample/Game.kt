@@ -1,5 +1,6 @@
-package com.krishnakandula.ironengine
+package com.krishnakandula.ironengine.sample
 
+import com.krishnakandula.ironengine.Window
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.SceneManager
 import com.krishnakandula.ironengine.graphics.Mesh
@@ -85,7 +86,7 @@ class Game {
 
             shader.setMat4("view", camera.view)
             shader.setMat4("projection", camera.projection)
-            boids = List(500) { x ->
+            boids = List(10000) {
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 

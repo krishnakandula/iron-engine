@@ -1,7 +1,6 @@
 package com.krishnakandula.ironengine
 
 import org.joml.Vector2f
-import org.joml.Vector2i
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
@@ -14,7 +13,7 @@ class Window(width: Int, height: Int, title: String) {
 
     init {
         GLFW.glfwInit()
-        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3)
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE)
 
