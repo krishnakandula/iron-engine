@@ -6,15 +6,17 @@ import com.krishnakandula.ironengine.graphics.Mesh
 import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.OrthographicCamera
 import com.krishnakandula.ironengine.physics.Transform
-import glm_.detail.Random
-import glm_.glm
-import glm_.mat4x4.Mat4
-import glm_.vec3.Vec3
+import com.krishnakandula.ironengine.utils.clone
+import org.joml.Math
+import org.joml.Matrix4f
+import org.joml.Vector3f
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.GL_LINES
 import org.lwjgl.opengl.GL11.GL_TRIANGLES
 import org.lwjgl.opengl.GL11.GL_UNSIGNED_INT
 import org.lwjgl.opengl.GL11.glDrawElements
+import org.lwjgl.opengl.GL11.glLineWidth
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -22,8 +24,8 @@ class Game {
 
     class Boid(
         val transform: Transform,
-        var model: Mat4 = Mat4(1f),
-        var direction: Vec3 = Vec3(0f)
+        var model: Matrix4f = Matrix4f(),
+        var direction: Vector3f = Vector3f(0f)
     ) {
 
         init {
@@ -32,16 +34,15 @@ class Game {
 
         fun updateModel() {
             val roll = transform.rotation.z
-            model = Mat4(1)
-                .translate(transform.position)
-                .rotate(glm.radians(roll), 0f, 0f, 1f)
-                .scale(transform.scale)
+            direction.x = cos(Math.toRadians(roll + 90f))
+            direction.y = sin(Math.toRadians(roll + 90f))
+            direction.z = 0f
+            direction.normalize()
 
-            direction = Vec3(
-                cos(glm.radians(roll + 90f)),
-                sin(glm.radians(roll + 90f)),
-                0f
-            ).normalize()
+            model.identity()
+                .translate(transform.position)
+                .rotate(Math.toRadians(roll), 0f, 0f, 1f)
+                .scale(transform.scale)
         }
     }
 
@@ -63,8 +64,15 @@ class Game {
             0, 1, 2,
         )
 
+        val lineVertices = floatArrayOf(
+            0.0f, -0.5f, 0.0f,
+            0.0f, 2.0f, 0.0f
+        )
+        val lineIndices = intArrayOf(0, 1)
+
         val camera = OrthographicCamera.new(1600f, 1600f, 20f, 20f, 0f, 10f)
-        val mesh = Mesh(triangleVertices, triangleIndices)
+        val boidMesh = Mesh(triangleVertices, triangleIndices, 3, 3)
+        val lineMesh = Mesh(lineVertices, lineIndices, 3, 3)
         val shader = Shader(
             "src/main/resources/shaders/vert.glsl",
             "src/main/resources/shaders/frag.glsl"
@@ -77,87 +85,80 @@ class Game {
 
             shader.setMat4("view", camera.view)
             shader.setMat4("projection", camera.projection)
-            shader.setMat4("model", Mat4(1))
-            boids = (0..55).map { x ->
-                val startPositionX = Random[-worldWidth / 2f, worldWidth / 2f]
-                val startPositionY = Random[-worldHeight / 2f, worldHeight / 2f]
+            boids = List(500) { x ->
+                val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
+                val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
+
                 // randomize rotation
-                val roll = Random[0f, 360f]
-                Boid(Transform(
-                    Vec3(startPositionX, startPositionY, 0f),
-                    Vec3(0f, 0f, -roll),
-                    Vec3(.3f, .6f, 1)))
+                val roll = getRandInRange(0f, 360f)
+                Boid(
+                    Transform(
+                        Vector3f(startPositionX, startPositionY, 0f),
+                        Vector3f(0f, 0f, -roll),
+                        Vector3f(.3f, .6f, 1f)
+                    )
+                )
             }
         }
 
         override fun dispose() {
-            mesh.dispose()
+            boidMesh.dispose()
             shader.dispose()
         }
 
         override fun update(deltaTime: Double) {
-            mesh.bind()
+            println(1.0 / deltaTime)
+            boidMesh.bind()
             boids.forEach { boid ->
                 shader.setMat4("model", boid.model)
-                glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0)
+                glDrawElements(GL_TRIANGLES, boidMesh.indexCount, GL_UNSIGNED_INT, 0)
             }
-            mesh.unbind()
+            boidMesh.unbind()
+
+            lineMesh.bind()
+            glLineWidth(2f)
+            boids.forEach { boid ->
+                shader.setMat4("model", boid.model)
+                glDrawElements(GL_LINES, lineMesh.indexCount, GL_UNSIGNED_INT, 0)
+            }
+            lineMesh.unbind()
         }
 
         override fun fixedUpdate(deltaTime: Double) {
             processInput(deltaTime)
-            boids.forEach { boid ->
-                boid.transform.translate(boid.direction * deltaTime * maxSpeed)
-//                boid.transform.rotate(Vec3(0f, 0f, deltaTime) * 0.1f)
+            boids.parallelStream().forEach { boid ->
+                boid.transform.translate(boid.direction.clone().mul(deltaTime.toFloat() * maxSpeed))
                 val xBoundary = worldWidth / 2f
                 val yBoundary = worldHeight / 2f
 
                 // check if boid is past world boundary
-                val direction = boid.direction
                 val position = boid.transform.position
-
-                if (position.x > xBoundary) {
-                    val slope = direction.y / direction.x
-                    val intercept = position.y - (slope * position.x)
-
-                    boid.transform.position = when {
-                        slope == 0f -> Vec3(-xBoundary, position.y, 0f)
-                        slope < 0f -> Vec3(getInterceptCoordinateX(slope, intercept, yBoundary), yBoundary, 0f)
-                        else -> Vec3(getInterceptCoordinateX(slope, intercept, -yBoundary), -yBoundary, 0f)
-                    }
-                } else if (position.x < -xBoundary) {
-                    val slope = direction.y / direction.x
-                    val intercept = position.y - (slope * position.x)
-
-                    boid.transform.position = when {
-                        slope == 0f -> Vec3(xBoundary, position.y, 0f)
-                        slope < 0f -> Vec3(getInterceptCoordinateX(slope, intercept, -yBoundary), -yBoundary, 0f)
-                        else -> Vec3(getInterceptCoordinateX(slope, intercept, yBoundary), yBoundary, 0f)
-                    }
+                if (position.x > xBoundary || position.x < -xBoundary) {
+                    position.x = -position.x
+                } else if (position.y > yBoundary || position.y < -yBoundary) {
+                    position.y = -position.y
                 }
 
                 boid.updateModel()
             }
         }
 
-        private fun getInterceptCoordinateX(slope: Float, intercept: Float, y: Float): Float = (y - intercept) / slope
-
         private fun processInput(deltaTime: Double) {
             var cameraTransformDirty = false
             if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS) {
-                camera.transform.translate(Vec3(0f, 1f, 0f) * cameraSpeed * deltaTime)
+                camera.transform.translate(Vector3f(0f, 1f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
                 cameraTransformDirty = true
             }
             if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS) {
-                camera.transform.translate(Vec3(-1f, 0f, 0f) * cameraSpeed * deltaTime)
+                camera.transform.translate(Vector3f(-1f, 0f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
                 cameraTransformDirty = true
             }
             if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS) {
-                camera.transform.translate(Vec3(0f, -1f, 0f) * cameraSpeed * deltaTime)
+                camera.transform.translate(Vector3f(0f, -1f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
                 cameraTransformDirty = true
             }
             if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS) {
-                camera.transform.translate(Vec3(1f, 0f, 0f) * cameraSpeed * deltaTime)
+                camera.transform.translate(Vector3f(1f, 0f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
                 cameraTransformDirty = true
             }
 
@@ -178,6 +179,9 @@ class Game {
 
             worldWidth *= widthRatio
             worldHeight *= heightRatio
+
+            prevWidth = width.toFloat()
+            prevHeight = height.toFloat()
         }
 
         override fun onKeyEvent(key: Int, action: Int): Boolean {
@@ -200,4 +204,9 @@ class Game {
             window.pollEvents()
         }
     }
+}
+
+fun getRandInRange(min: Float, max: Float): Float {
+    val rand = Math.random()
+    return (((max - min) * rand) + min).toFloat()
 }

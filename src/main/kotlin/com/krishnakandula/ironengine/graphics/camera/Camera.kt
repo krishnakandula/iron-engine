@@ -1,12 +1,12 @@
 package com.krishnakandula.ironengine.graphics.camera
 
 import com.krishnakandula.ironengine.physics.Transform
-import glm_.mat4x4.Mat4
+import org.joml.Matrix4f
 
 abstract class Camera(
     val transform: Transform,
-    var view: Mat4,
-    var projection: Mat4
+    var view: Matrix4f,
+    var projection: Matrix4f
 ) {
 
     abstract fun update()

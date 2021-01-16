@@ -1,20 +1,20 @@
 package com.krishnakandula.ironengine.physics
 
-import glm_.vec3.Vec3
+import org.joml.Vector3f
 
-data class Transform(var position: Vec3,
-                     var rotation: Vec3,
-                     var scale: Vec3) {
+data class Transform(var position: Vector3f,
+                     var rotation: Vector3f,
+                     var scale: Vector3f) {
 
-    fun translate(translation: Vec3) {
-        position = position + translation
+    fun translate(translation: Vector3f) {
+        position.add(translation)
     }
 
-    fun rotate(rotation: Vec3) {
-        this.rotation = this.rotation + rotation
+    fun rotate(rotation: Vector3f) {
+        this.rotation.add(rotation)
     }
 
-    fun scale(scale: Vec3) {
-        this.scale = this.scale * scale
+    fun scale(scale: Vector3f) {
+        this.scale.mul(scale)
     }
 }

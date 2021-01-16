@@ -1,10 +1,10 @@
 package com.krishnakandula.ironengine.graphics
 
 import com.krishnakandula.ironengine.Disposable
-import glm_.mat4x4.Mat4
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
+import org.joml.Matrix4f
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20C
@@ -46,11 +46,11 @@ class Shader(vertexShaderPath: String, fragmentShaderPath: String) : Disposable 
         GL20C.glUniform1f(location, value)
     }
 
-    fun setMat4(name: String, value: Mat4) {
+    fun setMat4(name: String, value: Matrix4f) {
         val location = GL20C.glGetUniformLocation(id, name)
         MemoryStack.stackPush().use { stack ->
-            val transformData = stack.mallocFloat(16)
-            GL20C.glUniformMatrix4fv(location, false, value.to(transformData))
+            val buffer = value.get(stack.mallocFloat(16))
+            GL20C.glUniformMatrix4fv(location, false, buffer)
         }
     }
 

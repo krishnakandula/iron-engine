@@ -1,14 +1,14 @@
 package com.krishnakandula.ironengine.graphics.camera
 
 import com.krishnakandula.ironengine.physics.Transform
-import glm_.glm
-import glm_.mat4x4.Mat4
-import glm_.vec3.Vec3
+import com.krishnakandula.ironengine.utils.clone
+import org.joml.Matrix4f
+import org.joml.Vector3f
 
 class OrthographicCamera(
     transform: Transform,
-    view: Mat4,
-    projection: Mat4,
+    view: Matrix4f,
+    projection: Matrix4f,
     val widthRatio: Float,
     val heightRatio: Float,
     val near: Float,
@@ -17,8 +17,8 @@ class OrthographicCamera(
 
     companion object {
 
-        private val DIRECTION = Vec3(0f, 0f, -1f)
-        private val WORLD_UP = Vec3(0f, 1f, 0f)
+        private val DIRECTION = Vector3f(0f, 0f, -1f)
+        private val WORLD_UP = Vector3f(0f, 1f, 0f)
 
         fun new(
             screenWidth: Float,
@@ -34,16 +34,16 @@ class OrthographicCamera(
             val top = height / 2f
             val bottom = -top
 
-            val projectionMatrix = glm.ortho(left, right, bottom, top, near, far)
+            val projectionMatrix = Matrix4f().ortho(left, right, bottom, top, near, far)
             val widthRatio = width / screenWidth
             val heightRatio = height / screenHeight
 
 
-            val transform = Transform(position = Vec3(0f), rotation = Vec3(0f), scale = Vec3(1f))
+            val transform = Transform(position = Vector3f(0f), rotation = Vector3f(0f), scale = Vector3f(1f))
 
             return OrthographicCamera(
                 transform = transform,
-                view = Mat4(1f),
+                view = Matrix4f(),
                 projection = projectionMatrix,
                 widthRatio = widthRatio,
                 heightRatio = heightRatio,
@@ -54,10 +54,11 @@ class OrthographicCamera(
     }
 
     override fun update() {
-        super.view = glm.lookAt(
-            super.transform.position,
-            super.transform.position + DIRECTION,
-            WORLD_UP)
+        super.view.lookAt(
+            super.transform.position.clone(),
+            super.transform.position.clone().add(DIRECTION),
+            WORLD_UP.clone()
+        )
     }
 
     override fun onWindowSizeUpdated(windowWidth: Int, windowHeight: Int) {
@@ -72,6 +73,6 @@ class OrthographicCamera(
         val top = windowHeight / 2f
         val bottom = -top
 
-        super.projection = glm.ortho(-10.0f * ratio,10.0f * ratio, -10f, 10f, near, far)
+        super.projection.identity().ortho(-10.0f * ratio,10.0f * ratio, -10f, 10f, near, far)
     }
 }

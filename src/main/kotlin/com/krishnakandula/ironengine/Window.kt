@@ -1,6 +1,7 @@
 package com.krishnakandula.ironengine
 
-import glm_.vec2.Vec2
+import org.joml.Vector2f
+import org.joml.Vector2i
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
@@ -33,23 +34,23 @@ class Window(width: Int, height: Int, title: String) {
         GL11.glViewport(0, 0, width, height)
     }
 
-    fun getDimensions(): Vec2 {
+    fun getDimensions(): Vector2f {
         return MemoryStack.stackPush().use { stack ->
             val widthBuffer = stack.mallocInt(1)
             val heightBuffer = stack.mallocInt(1)
             GLFW.glfwGetFramebufferSize(windowId, widthBuffer, heightBuffer)
 
-            Vec2(widthBuffer.get(), heightBuffer.get())
+            Vector2f(widthBuffer.get().toFloat(), heightBuffer.get().toFloat())
         }
     }
 
-    fun getCursorPosition(): Vec2 {
+    fun getCursorPosition(): Vector2f {
         return MemoryStack.stackPush().use { stack ->
             val xBuffer = stack.mallocDouble(1)
             val yBuffer = stack.mallocDouble(1)
             GLFW.glfwGetCursorPos(windowId, xBuffer, yBuffer)
 
-            Vec2(xBuffer.get(), yBuffer.get())
+            Vector2f(xBuffer.get().toFloat(), yBuffer.get().toFloat())
         }
     }
 

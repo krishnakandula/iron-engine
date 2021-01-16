@@ -1,7 +1,6 @@
 package com.krishnakandula.ironengine.graphics
 
 import com.krishnakandula.ironengine.Disposable
-import glm_.BYTES
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_FLOAT
@@ -16,8 +15,12 @@ import org.lwjgl.opengl.GL30.glEnableVertexAttribArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
 import org.lwjgl.opengl.GL30.glVertexAttribPointer
 
-class Mesh(vertices: FloatArray,
-           indices: IntArray) : Disposable {
+class Mesh(
+    vertices: FloatArray,
+    indices: IntArray,
+    vecSize: Int,
+    stride: Int
+) : Disposable {
 
     val vao: Int
     val vertexCount: Int
@@ -40,7 +43,7 @@ class Mesh(vertices: FloatArray,
         // bind VBO
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * Float.BYTES, 0)
+        glVertexAttribPointer(0, vecSize, GL_FLOAT, false, stride * Float.SIZE_BYTES, 0)
         glEnableVertexAttribArray(0)
 
         // bind EBO
@@ -50,7 +53,7 @@ class Mesh(vertices: FloatArray,
         // unbind VBO but not VBO
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-        // unbind VAO
+        // unbind VAOS
         glBindVertexArray(0)
     }
 
