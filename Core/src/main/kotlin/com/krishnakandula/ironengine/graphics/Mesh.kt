@@ -1,6 +1,6 @@
 package com.krishnakandula.ironengine.graphics
 
-import com.krishnakandula.ironengine.Disposable
+import com.krishnakandula.ironengine.ecs.component.Component
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_FLOAT
@@ -20,7 +20,11 @@ class Mesh(
     indices: IntArray,
     vecSize: Int,
     stride: Int
-) : Disposable {
+) : Component(TYPE_ID) {
+
+    companion object {
+        val TYPE_ID: Int = getNewTypeId()
+    }
 
     val vao: Int
     val vertexCount: Int

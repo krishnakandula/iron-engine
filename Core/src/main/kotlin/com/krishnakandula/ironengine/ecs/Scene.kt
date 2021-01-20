@@ -1,14 +1,37 @@
 package com.krishnakandula.ironengine.ecs
 
 import com.krishnakandula.ironengine.Disposable
+import com.krishnakandula.ironengine.ecs.component.ComponentManager
 
-interface Scene : Disposable {
+abstract class Scene: Disposable {
 
-    fun update(deltaTime: Double)
+    val componentManager: ComponentManager = ComponentManager()
 
-    fun fixedUpdate(deltaTime: Double)
+    val entityManager: EntityManager = EntityManager()
 
-    fun onWindowSizeUpdated(width: Int, height: Int)
+    private val systems: MutableList<System> = mutableListOf()
 
-    fun onKeyEvent(key: Int, action: Int): Boolean
+    open fun update(deltaTime: Double) {
+        for (i in 0..systems.lastIndex) {
+            systems[i].update(deltaTime)
+        }
+    }
+
+    open fun fixedUpdate(deltaTime: Double) {
+        for (i in 0..systems.lastIndex) {
+            systems[i].fixedUpdate(deltaTime)
+        }
+    }
+
+    open fun onWindowSizeUpdated(width: Int, height: Int) {
+    }
+
+    open fun onKeyEvent(key: Int, action: Int): Boolean = false
+
+    open fun onCursorPositionChanged(xPosition: Double, yPosition: Double): Boolean = false
+
+    protected fun addSystem(system: System) {
+        systems.add(system)
+        system.onAddedToScene(this)
+    }
 }

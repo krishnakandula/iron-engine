@@ -1,10 +1,28 @@
 package com.krishnakandula.ironengine.physics
 
+import com.krishnakandula.ironengine.ecs.component.Component
+import org.joml.Math
+import org.joml.Matrix4f
 import org.joml.Vector3f
+import kotlin.math.cos
+import kotlin.math.sin
 
-data class Transform(var position: Vector3f,
-                     var rotation: Vector3f,
-                     var scale: Vector3f) {
+class Transform(
+    var position: Vector3f = Vector3f(0f),
+    var rotation: Vector3f = Vector3f(0f),
+    var scale: Vector3f = Vector3f(1f),
+    var direction: Vector3f = Vector3f(0f, 1f, 0f)
+) : Component(TYPE_ID) {
+
+    companion object {
+        val TYPE_ID: Int = getNewTypeId()
+    }
+
+    var model: Matrix4f = Matrix4f()
+
+    init {
+        updateModel()
+    }
 
     fun translate(translation: Vector3f) {
         position.add(translation)
@@ -16,5 +34,18 @@ data class Transform(var position: Vector3f,
 
     fun scale(scale: Vector3f) {
         this.scale.mul(scale)
+    }
+
+    fun updateModel() {
+        val roll = rotation.z
+        direction.x = cos(Math.toRadians(roll + 90f))
+        direction.y = sin(Math.toRadians(roll + 90f))
+        direction.z = 0f
+        direction.normalize()
+
+        model.identity()
+            .translate(position)
+            .rotate(Math.toRadians(roll), 0f, 0f, 1f)
+            .scale(scale)
     }
 }

@@ -23,7 +23,7 @@ class Window(width: Int, height: Int, title: String) {
             throw RuntimeException("Unable to create GLFW window")
         }
         GLFW.glfwMakeContextCurrent(windowId)
-
+        GLFW.glfwSetInputMode(windowId, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED)
         // Initialize OpenGL
         if (GL.createCapabilities() == null) {
             GLFW.glfwTerminate()
@@ -63,6 +63,10 @@ class Window(width: Int, height: Int, title: String) {
 
     fun setKeyCallback(callback: (window: Long, key: Int, scancode: Int, action: Int, mods: Int) -> Unit) {
         GLFW.glfwSetKeyCallback(windowId, callback)
+    }
+
+    fun setCursorPositionCallback(callback: (window: Long, xPos: Double, yPos: Double) -> Unit) {
+        GLFW.glfwSetCursorPosCallback(windowId, callback)
     }
 
     fun swapBuffers() {

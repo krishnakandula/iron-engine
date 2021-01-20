@@ -4,8 +4,9 @@ import com.krishnakandula.ironengine.Window
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.glViewport
+import kotlin.math.min
 
-class SceneManager(private val updateDepth: Byte,
+class SceneManager(private val updateDepth: Int,
                    private val window: Window
 ) {
 
@@ -17,6 +18,7 @@ class SceneManager(private val updateDepth: Byte,
     init {
         window.setFrameBufferSizeCallback(this::frameBufferSizeCallback)
         window.setKeyCallback(this::keyCallback)
+        window.setCursorPositionCallback(this::cursorPositionCallback)
     }
 
     fun push(scene: Scene) {
@@ -68,6 +70,14 @@ class SceneManager(private val updateDepth: Byte,
 
         if (!actionHandled && key == GLFW.GLFW_KEY_ESCAPE) {
             window.close()
+        }
+    }
+
+    private fun cursorPositionCallback(windowId: Long, xPos: Double, yPos: Double) {
+        for (i in 0 until min(updateDepth, scenes.size)) {
+            if (scenes[i].onCursorPositionChanged(xPos, yPos)) {
+                break
+            }
         }
     }
 }
