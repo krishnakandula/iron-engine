@@ -2,9 +2,8 @@ package com.krishnakandula.ironengine.ecs.component
 
 import com.krishnakandula.ironengine.utils.BitSet
 
-class Archetype(componentTypeIds: List<Int>? = null) {
-
-    internal val componentsMask: BitSet = BitSet()
+class Archetype(componentTypeIds: List<Int>? = null,
+                internal val componentsMask: BitSet = BitSet()) {
 
     init {
         if (componentTypeIds != null) {
@@ -29,9 +28,11 @@ class Archetype(componentTypeIds: List<Int>? = null) {
     }
 
 
-    internal fun isSubsetOf(query: Archetype): Boolean {
-        return query.componentsMask.isSubsetOf(componentsMask)
+    internal fun isSubsetOf(required: Archetype): Boolean {
+        return componentsMask.isSubsetOf(required.componentsMask)
     }
+
+    internal fun clone(): Archetype = Archetype(componentsMask = componentsMask.clone())
 
     override fun hashCode(): Int = componentsMask.hashCode()
 
@@ -45,4 +46,5 @@ class Archetype(componentTypeIds: List<Int>? = null) {
             }
         }
     }
+
 }

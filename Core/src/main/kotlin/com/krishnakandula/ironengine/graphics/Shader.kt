@@ -4,7 +4,6 @@ import com.krishnakandula.ironengine.Disposable
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.IOException
-import java.nio.file.Paths
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL11
@@ -60,8 +59,6 @@ class Shader(vertexShaderPath: String, fragmentShaderPath: String) : Disposable 
     }
 
     private fun readShaderSourceFromFile(shaderPath: String): String {
-        println(Paths.get("").toAbsolutePath())
-        val s = Paths.get("").toAbsolutePath().toString()
         val shaderSource = StringBuilder()
         try {
             BufferedReader(FileReader(shaderPath)).use { reader ->

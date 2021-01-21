@@ -51,6 +51,15 @@ class BitSet {
         return true
     }
 
+    fun clone(): BitSet {
+        val clone = BitSet()
+        for (i in 0..words.lastIndex) {
+            clone.words[i] = words[i]
+        }
+
+        return clone
+    }
+
     private fun getWord(wordIndex: Int): Long? {
         return if (wordIndex >= words.size) {
             null

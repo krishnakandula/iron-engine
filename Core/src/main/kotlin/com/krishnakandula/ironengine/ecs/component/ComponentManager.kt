@@ -17,7 +17,10 @@ class ComponentManager {
         archetypes[entity.archetype]?.remove(entity)
         // add entity to new archetype
         entity.archetype.addComponent(component)
-        archetypes.computeIfAbsent(entity.archetype) { mutableSetOf() }.add(entity)
+        if (!archetypes.containsKey(entity.archetype)) {
+            archetypes[entity.archetype.clone()] = mutableSetOf()
+        }
+        archetypes[entity.archetype]?.add(entity)
         // add component to component mapper
         val mapper = components.computeIfAbsent(clazz) { ComponentMapper<T>() } as ComponentMapper<T>
         mapper.addComponent(entity, component)
@@ -52,7 +55,8 @@ class ComponentManager {
         val entities = mutableListOf<Entity>()
         archetypes.forEach { entry ->
             val archetype = entry.key
-            if (requiredComponents.isSubsetOf(archetype)) {
+            val isSubset = requiredComponents.isSubsetOf(archetype)
+            if (isSubset) {
                 entities.addAll(entry.value)
             }
         }

@@ -28,7 +28,7 @@ class RenderingSystem(private val camera: Camera,
 
     override fun update(deltaTime: Double) {
         super.update(deltaTime)
-
+        println(1 / deltaTime)
         val entities: List<Entity> = componentManager.query(requiredComponents)
 
         shader.use()
