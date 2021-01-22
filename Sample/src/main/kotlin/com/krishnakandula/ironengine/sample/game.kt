@@ -19,8 +19,8 @@ class Game {
     class BoidScene(private val window: Window) : Scene() {
 
         private val cameraSpeed = 10f
-        private val worldWidth = 25f
-        private val worldHeight = 25f
+        private val worldWidth = 30f
+        private val worldHeight = 30f
 
         val triangleVertices = floatArrayOf(
             -0.5f, -0.5f, 0.0f,
@@ -46,7 +46,7 @@ class Game {
         val debugRenderer = DebugRenderer(camera, shader)
 
         init {
-            (0 until 25).forEach { _ ->
+            (0 until 250).forEach { _ ->
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 
@@ -56,12 +56,12 @@ class Game {
                 createBoid(
                     Vector3f(startPositionX, startPositionY, 0f),
                     Vector3f(0f, 0f, roll),
-                    Vector3f(.3f, .6f, 1f)
+                    Vector3f(.15f, .3f, 1f)
                 )
             }
 
             addSystem(RenderingSystem(camera, shader))
-            addSystem(CollisionSystem(SpatialHash2D(worldWidth, worldHeight, 10, 10)))
+            addSystem(CollisionSystem(SpatialHash2D(worldWidth, worldHeight, 3, 3)))
             addSystem(MovementSystem(worldWidth / 2f, worldHeight / 2f))
         }
 
@@ -73,13 +73,7 @@ class Game {
                 scale = scale
             ))
             componentManager.addComponent(boid, boidMesh)
-            componentManager.addComponent(boid, MovementComponent())
-        }
-
-        override fun update(deltaTime: Double) {
-            debugRenderer.renderLine(Vector3f(0f, 1f, 0f), Vector3f(2f, 1f, 0f))
-            debugRenderer.renderLine(Vector3f(0f, 0f, 0f), Vector3f(1f, 0f, 0f))
-            super.update(deltaTime)
+            componentManager.addComponent(boid, MovementComponent(speed = 4f))
         }
 
         override fun dispose() {

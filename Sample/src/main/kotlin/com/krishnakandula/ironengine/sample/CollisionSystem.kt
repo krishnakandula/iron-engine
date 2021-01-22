@@ -5,28 +5,16 @@ import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.ecs.component.Archetype
 import com.krishnakandula.ironengine.ecs.component.ComponentManager
-import com.krishnakandula.ironengine.physics.Line
 import com.krishnakandula.ironengine.physics.Transform
-import com.krishnakandula.ironengine.physics.collisions.rayCastTriangle2D
 import com.krishnakandula.ironengine.utils.clone
-import com.krishnakandula.ironengine.utils.xyz
 import org.joml.Vector3f
-import org.joml.Vector4f
 
 class CollisionSystem(private val spatialHash: SpatialHash2D) : System {
 
     private lateinit var componentManager: ComponentManager
     private val query: Archetype = Archetype(listOf(Transform.TYPE_ID))
-    private val rotationSpeed: Float = 150f
 
-
-    private var p0: Vector4f = Vector4f(-0.5f, -0.5f, 0.0f, 0f)
-    private var p1: Vector4f = Vector4f(0.0f, 0.5f, 0.0f, 0f)
-    private var p2: Vector4f = Vector4f(0.5f, -0.5f, 0.0f, 0f)
-    private var line0: Vector4f = Vector4f(0f, 0.5f, 0f, 0f)
-    private var line1: Vector4f = Vector4f(0f, 1.5f, 0f, 0f)
-
-    private val collisionDistance: Float = 3f
+    private val collisionDistanceSquared: Float = 1f
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -49,23 +37,18 @@ class CollisionSystem(private val spatialHash: SpatialHash2D) : System {
         }
 
         // apply rules
-//        sameDirectionRule(deltaTime)
-        avoidCollisionsRule(deltaTime)
+        sameDirectionRule(deltaTime, 100f)
+        avoidCollisionsRule(deltaTime, 200f)
+        flockCenterRule(deltaTime, 700f)
     }
 
-    private fun avoidCollisionsRule(deltaTime: Double) {
+    private fun avoidCollisionsRule(deltaTime: Double, multiplier: Float) {
         val cells: List<List<Entity>> = spatialHash.getCells()
 
         cells.stream().forEach { cell ->
-            // for each boid's, raycast using the boid's position to check if it hits any other boid in it's cell
             for (i in 0..cell.lastIndex) {
                 val boid: Entity = cell[i]
                 val transform: Transform = componentManager.getComponent(boid) ?: continue
-
-                line0.set(line0.mul(transform.model))
-                line1.set(line1.mul(transform.model))
-
-                val line = Line(transform.position.clone(), line1.sub(line0).xyz().mul(collisionDistance))
 
                 for (x in 0..cell.lastIndex) {
                     if (x == i) {
@@ -75,33 +58,23 @@ class CollisionSystem(private val spatialHash: SpatialHash2D) : System {
                     val otherBoid: Entity = cell[x]
                     val otherTransform: Transform = componentManager.getComponent(otherBoid) ?: continue
 
-                    val transformedP0 = p0.mul(otherTransform.model).xyz()
-                    val transformedP1 = p1.mul(otherTransform.model).xyz()
-                    val transformedP2 = p2.mul(otherTransform.model).xyz()
+                    // get distance between boids
+                    val distance: Vector3f = otherTransform.position.clone().sub(transform.position)
+                    val distanceLength: Float = distance.lengthSquared()
+                    if (distanceLength <= collisionDistanceSquared) {
+                        // move in the opposite direction of the distance vector
+                        steerTowards(deltaTime, otherTransform, distance, multiplier)
+                        steerTowards(deltaTime, transform, distance.mul(-1f), multiplier)
 
-                    val l0 = Line(transformedP0, transformedP1.clone().sub(transformedP0))
-                    val l1 = Line(transformedP1, transformedP2.clone().sub(transformedP1))
-                    val l2 = Line(transformedP2, transformedP0.clone().sub(transformedP2))
-
-                    val collision: Vector3f? = rayCastTriangle2D(line, l0, l1, l2)
-                    if (collision != null) {
-                        println("Will collide")
+                        otherTransform.updateModel()
                     }
-
-                    // reset p0,p1,p2 vertices
-                    p0.set(-0.5f, -0.5f, 0.0f, 0f)
-                    p1.set(0.0f, 0.5f, 0.0f, 0f)
-                    p2.set(0.5f, -0.5f, 0.0f, 0f)
                 }
+                transform.updateModel()
             }
-
-            // reset line vertices
-            line0.set(0f, 0.5f, 0f, 0f)
-            line1.set(0f, 1.5f, 0f, 0f)
         }
     }
 
-    private fun sameDirectionRule(deltaTime: Double) {
+    private fun sameDirectionRule(deltaTime: Double, multiplier: Float) {
         val cells: List<List<Entity>> = spatialHash.getCells()
         cells.parallelStream().forEach { cell ->
             if (cell.size <= 1) {
@@ -123,9 +96,54 @@ class CollisionSystem(private val spatialHash: SpatialHash2D) : System {
 
                 val zRotation = transform.rotation.z % 360
                 val rotateDirection: Float = if (zRotation >= averageRotation) -1f else 1f
-                transform.rotate(0f, 0f,  (rotateDirection * deltaTime * rotationSpeed).toFloat())
+                transform.rotate(0f, 0f, (rotateDirection * deltaTime * multiplier).toFloat())
                 transform.updateModel()
             }
         }
+    }
+
+    private fun flockCenterRule(deltaTime: Double, multiplier: Float) {
+        val cells: List<List<Entity>> = spatialHash.getCells()
+        cells.parallelStream().forEach { cell ->
+            if (cell.size <= 1) {
+                return@forEach
+            }
+
+            var averageXPos = 0f
+            var averageYPos = 0f
+            var totalBoids = 0
+
+            for (i in 0..cell.lastIndex) {
+                val boid: Entity = cell[i]
+                val transform: Transform = componentManager.getComponent(boid) ?: continue
+
+                averageXPos += transform.position.x
+                averageYPos += transform.position.y
+
+                ++totalBoids
+            }
+
+            averageXPos /= totalBoids
+            averageYPos /= totalBoids
+
+            val flockCenter = Vector3f(averageXPos, averageYPos, 0f)
+
+            for (i in 0..cell.lastIndex) {
+                val boid: Entity = cell[i]
+                val transform: Transform = componentManager.getComponent(boid) ?: continue
+
+                val steerDirection: Vector3f = flockCenter.clone().sub(transform.position)
+                steerTowards(deltaTime, transform, steerDirection, multiplier)
+                transform.updateModel()
+            }
+        }
+    }
+
+    private fun steerTowards(deltaTime: Double, transform: Transform, targetDirection: Vector3f, multiplier: Float) {
+        val transformDirection: Vector3f = transform.direction.clone().normalize()
+
+        // dot product of normalized transform direction and steer direction gives rotation angle
+        val rotationAngle = targetDirection.clone().normalize().dot(transformDirection)
+        transform.rotate(0f, 0f, rotationAngle * deltaTime.toFloat() * multiplier)
     }
 }
