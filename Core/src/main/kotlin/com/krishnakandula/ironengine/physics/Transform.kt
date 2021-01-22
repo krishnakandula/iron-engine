@@ -32,20 +32,24 @@ class Transform(
         this.rotation.add(rotation)
     }
 
+    fun rotate(x: Float, y: Float, z: Float) {
+        rotation.add(x, y, z)
+    }
+
     fun scale(scale: Vector3f) {
         this.scale.mul(scale)
     }
 
     fun updateModel() {
         val roll = rotation.z
-        direction.x = cos(Math.toRadians(roll + 90f))
-        direction.y = sin(Math.toRadians(roll + 90f))
+        direction.x = cos(Math.toRadians(roll))
+        direction.y = sin(Math.toRadians(roll))
         direction.z = 0f
         direction.normalize()
 
         model.identity()
             .translate(position)
-            .rotate(Math.toRadians(roll), 0f, 0f, 1f)
+            .rotate(Math.toRadians(roll - 90f), 0f, 0f, 1f)
             .scale(scale)
     }
 }

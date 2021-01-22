@@ -26,20 +26,15 @@ class Mesh(
         val TYPE_ID: Int = getNewTypeId()
     }
 
-    val vao: Int
-    val vertexCount: Int
-    val indexCount: Int
+    private val vao: Int = glGenVertexArrays()
+    private val vbo: Int = glGenBuffers()
+    private val ebo: Int = glGenBuffers()
 
-    private val vbo: Int
-    private val ebo: Int
+    val vertexCount: Int = vertices.size
+    val indexCount: Int = indices.size
+
 
     init {
-        vao = glGenVertexArrays()
-        vbo = glGenBuffers()
-        ebo = glGenBuffers()
-
-        vertexCount = vertices.size
-        indexCount = indices.size
 
         // bind VAO
         glBindVertexArray(vao)

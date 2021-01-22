@@ -11,7 +11,7 @@ import com.krishnakandula.ironengine.utils.clone
 class MovementSystem(private val worldXBoundary: Float, private val worldYBoundary: Float) : System {
 
     private lateinit var componentManager: ComponentManager
-    private val archetype: Archetype = Archetype(listOf(Transform.TYPE_ID, MovementComponent.TYPE_ID))
+    private val query: Archetype = Archetype(listOf(Transform.TYPE_ID, MovementComponent.TYPE_ID))
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -21,8 +21,8 @@ class MovementSystem(private val worldXBoundary: Float, private val worldYBounda
     override fun fixedUpdate(deltaTime: Double) {
         super.fixedUpdate(deltaTime)
 
-        val components: List<Entity> = componentManager.query(archetype)
-        components.parallelStream().forEach { entity ->
+        val components: List<Entity> = componentManager.query(query)
+        components.stream().forEach { entity ->
             val transform = componentManager.getComponent<Transform>(entity) ?: return@forEach
             val movement = componentManager.getComponent<MovementComponent>(entity) ?: return@forEach
 

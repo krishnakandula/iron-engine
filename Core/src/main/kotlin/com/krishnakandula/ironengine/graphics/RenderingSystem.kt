@@ -28,7 +28,6 @@ class RenderingSystem(private val camera: Camera,
 
     override fun update(deltaTime: Double) {
         super.update(deltaTime)
-        println(1 / deltaTime)
         val entities: List<Entity> = componentManager.query(requiredComponents)
 
         shader.use()
@@ -41,8 +40,8 @@ class RenderingSystem(private val camera: Camera,
             val transform = componentManager.getComponent<Transform>(entity) ?: continue
             val mesh = componentManager.getComponent<Mesh>(entity) ?: continue
 
-            mesh.bind()
             transform.updateModel()
+            mesh.bind()
             shader.setMat4("model", transform.model)
             glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0)
             mesh.unbind()

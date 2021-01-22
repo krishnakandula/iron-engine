@@ -3,6 +3,7 @@ package com.krishnakandula.ironengine.sample
 import com.krishnakandula.ironengine.Window
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.SceneManager
+import com.krishnakandula.ironengine.graphics.DebugRenderer
 import com.krishnakandula.ironengine.graphics.Mesh
 import com.krishnakandula.ironengine.graphics.RenderingSystem
 import com.krishnakandula.ironengine.graphics.Shader
@@ -18,8 +19,8 @@ class Game {
     class BoidScene(private val window: Window) : Scene() {
 
         private val cameraSpeed = 10f
-        private val worldWidth = 60f
-        private val worldHeight = 60f
+        private val worldWidth = 25f
+        private val worldHeight = 25f
 
         val triangleVertices = floatArrayOf(
             -0.5f, -0.5f, 0.0f,
@@ -38,14 +39,14 @@ class Game {
 
         val camera = OrthographicCamera.new(1600f, 1600f, 100f, 0f, 10f)
         val boidMesh = Mesh(triangleVertices, triangleIndices, 3, 3)
-        val lineMesh = Mesh(lineVertices, lineIndices, 3, 3)
         val shader = Shader(
             "Sample/src/main/resources/shaders/vert.glsl",
             "Sample/src/main/resources/shaders/frag.glsl"
         )
+        val debugRenderer = DebugRenderer(camera, shader)
 
         init {
-            (0..20000).forEach { _ ->
+            (0 until 25).forEach { _ ->
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 
@@ -54,12 +55,13 @@ class Game {
 
                 createBoid(
                     Vector3f(startPositionX, startPositionY, 0f),
-                    Vector3f(0f, 0f, -roll),
+                    Vector3f(0f, 0f, roll),
                     Vector3f(.3f, .6f, 1f)
                 )
             }
 
             addSystem(RenderingSystem(camera, shader))
+            addSystem(CollisionSystem(SpatialHash2D(worldWidth, worldHeight, 10, 10)))
             addSystem(MovementSystem(worldWidth / 2f, worldHeight / 2f))
         }
 
@@ -72,6 +74,12 @@ class Game {
             ))
             componentManager.addComponent(boid, boidMesh)
             componentManager.addComponent(boid, MovementComponent())
+        }
+
+        override fun update(deltaTime: Double) {
+            debugRenderer.renderLine(Vector3f(0f, 1f, 0f), Vector3f(2f, 1f, 0f))
+            debugRenderer.renderLine(Vector3f(0f, 0f, 0f), Vector3f(1f, 0f, 0f))
+            super.update(deltaTime)
         }
 
         override fun dispose() {
@@ -119,7 +127,7 @@ class Game {
     }
 
     fun start() {
-        val window = Window(1000, 1000, "Game")
+        val window = Window(2000, 2000, "Game")
         val sceneManager = SceneManager(1, window)
         sceneManager.push(BoidScene(window))
 
