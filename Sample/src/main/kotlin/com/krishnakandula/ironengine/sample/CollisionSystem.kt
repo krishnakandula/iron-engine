@@ -8,6 +8,7 @@ import com.krishnakandula.ironengine.ecs.component.ComponentManager
 import com.krishnakandula.ironengine.graphics.DebugRenderer
 import com.krishnakandula.ironengine.physics.Transform
 import com.krishnakandula.ironengine.utils.clone
+import com.krishnakandula.ironengine.utils.timesAssign
 import org.joml.Vector3f
 import kotlin.math.atan2
 
@@ -39,9 +40,9 @@ class CollisionSystem(private val spatialHash: SpatialHash2D, private val debugR
         }
 
         // apply rules
-//        sameDirectionRule(deltaTime, 200f)
+        alignmentRule(entities, 1f)
 //        avoidCollisionsRule(deltaTime, entities, 200f)
-        cohesionRule(entities, 2f)
+        cohesionRule(entities, 1f)
     }
 
     private fun cohesionRule(entities: List<Entity>, multiplier: Float) {
@@ -90,30 +91,39 @@ class CollisionSystem(private val spatialHash: SpatialHash2D, private val debugR
         }
     }
 
-    private fun sameDirectionRule(deltaTime: Double, multiplier: Float) {
-        val cells: List<List<Entity>> = spatialHash.getCells()
-        cells.stream().forEach { cell ->
-            if (cell.size <= 1) {
-                return@forEach
+    private fun alignmentRule(entities: List<Entity>, multiplier: Float) {
+        entities.parallelStream().map { entity ->
+            val transform: Transform = componentManager.getComponent(entity) ?: return@map null
+            val movement: MovementComponent = componentManager.getComponent(entity) ?: return@map null
+
+            // find nearby entities
+            val nearbyBoids: List<Entity> = spatialHash.getNearby(transform.position)
+
+            val averageAcceleration = Vector3f(0f)
+            var numCounted = 0
+            for (i in 0..nearbyBoids.lastIndex) {
+                val otherBoid: Entity = nearbyBoids[i]
+                val otherTransform: Transform = componentManager.getComponent(otherBoid) ?: return@map null
+                val otherMovement: MovementComponent = componentManager.getComponent(otherBoid) ?: return@map null
+
+                if (transform.position.distanceSquared(otherTransform.position) <= collisionDistanceSquared) {
+                    averageAcceleration.add(otherMovement.acceleration)
+                    ++numCounted
+                }
             }
+            if (numCounted == 0) return@map null
 
-            // calculate average z rotation of all boids
-            var totalRotation = 0f
-            for (i in 0..cell.lastIndex) {
-                val boid: Entity = cell[i]
-                totalRotation += componentManager.getComponent<Transform>(boid)?.position?.z ?: 0f
-            }
-            val averageRotation: Float = (totalRotation / cell.size) % 360
+            averageAcceleration.div(numCounted.toFloat())
+            averageAcceleration *= multiplier
+            averageAcceleration.sub(movement.acceleration)
 
-            // now rotate each bird in the direction of its rotation
-            for (i in 0..cell.lastIndex) {
-                val boid: Entity = cell[i]
-                val transform: Transform = componentManager.getComponent(boid) ?: continue
+            Pair(movement, averageAcceleration)
+        }.forEach { movementAcceleration ->
+            if (movementAcceleration != null) {
+                val movement = movementAcceleration.first
+                val acceleration = movementAcceleration.second
 
-                val zRotation = transform.rotation.z % 360
-                val rotateDirection: Float = if (zRotation >= averageRotation) -1f else 1f
-                transform.rotate(0f, 0f, (rotateDirection * deltaTime * multiplier).toFloat())
-                transform.updateModel()
+                movement.acceleration.add(acceleration)
             }
         }
     }
