@@ -46,26 +46,30 @@ class Game {
         val debugRenderer = DebugRenderer(camera, shader)
 
         init {
-            (0 until 250).forEach { _ ->
+            (0 until 200).forEach { _ ->
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 
-                // randomize rotation
-                val roll = getRandInRange(0f, 360f)
+                // randomize acceleration
+                val acceleration = Vector3f(getRandInRange(-1f, 1f), getRandInRange(-1f, 1f), 0f)
 
                 createBoid(
                     Vector3f(startPositionX, startPositionY, 0f),
-                    Vector3f(0f, 0f, roll),
-                    Vector3f(.15f, .3f, 1f)
+                    Vector3f(0f),
+                    Vector3f(.15f, .3f, 1f),
+                    acceleration
                 )
             }
 
+
+            val spatialHash2D = SpatialHash2D(worldWidth, worldHeight, 10, 10, debugRenderer)
             addSystem(RenderingSystem(camera, shader))
-            addSystem(CollisionSystem(SpatialHash2D(worldWidth, worldHeight, 3, 3)))
+            addSystem(CollisionSystem(spatialHash2D, debugRenderer))
             addSystem(MovementSystem(worldWidth / 2f, worldHeight / 2f))
+            addSystem(spatialHash2D)
         }
 
-        private fun createBoid(position: Vector3f, rotation: Vector3f, scale: Vector3f) {
+        private fun createBoid(position: Vector3f, rotation: Vector3f, scale: Vector3f, acceleration: Vector3f) {
             val boid = entityManager.createEntity()
             componentManager.addComponent(boid, Transform(
                 position = position,
@@ -73,7 +77,7 @@ class Game {
                 scale = scale
             ))
             componentManager.addComponent(boid, boidMesh)
-            componentManager.addComponent(boid, MovementComponent(speed = 4f))
+            componentManager.addComponent(boid, MovementComponent(maxSpeed = 4f, acceleration = acceleration))
         }
 
         override fun dispose() {

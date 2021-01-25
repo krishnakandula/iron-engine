@@ -4,6 +4,7 @@ import com.krishnakandula.ironengine.ecs.component.Component
 import org.joml.Math
 import org.joml.Matrix4f
 import org.joml.Vector3f
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -34,6 +35,20 @@ class Transform(
 
     fun rotate(x: Float, y: Float, z: Float) {
         rotation.add(x, y, z)
+
+        val roll: Float = rotation.z
+        direction.x = cos(Math.toRadians(roll))
+        direction.y = sin(Math.toRadians(roll))
+        direction.z = 0f
+        direction.normalize()
+    }
+
+    fun setLookRotation(velocity: Vector3f) {
+        // calculate roll based off of x and y
+        val rollRadians: Float = atan2(velocity.y, velocity.x)
+        val rollDegrees: Float = rollRadians * (180f / Math.PI.toFloat())
+
+        rotation.z = rollDegrees
     }
 
     fun scale(scale: Vector3f) {
@@ -41,12 +56,7 @@ class Transform(
     }
 
     fun updateModel() {
-        val roll = rotation.z
-        direction.x = cos(Math.toRadians(roll))
-        direction.y = sin(Math.toRadians(roll))
-        direction.z = 0f
-        direction.normalize()
-
+        val roll: Float = rotation.z
         model.identity()
             .translate(position)
             .rotate(Math.toRadians(roll - 90f), 0f, 0f, 1f)
