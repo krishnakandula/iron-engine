@@ -13,7 +13,7 @@ class SpatialHash2D(
     private val debugRenderer: DebugRenderer? = null
 ) : System {
 
-    var drawHash: Boolean = true
+    var drawHash: Boolean = false
 
     private val spatialHash: List<MutableList<Entity>>
     val cellWidth = worldWidth / cols

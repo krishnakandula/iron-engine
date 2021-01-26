@@ -57,6 +57,11 @@ class Transform(
 
     fun updateModel() {
         val roll: Float = rotation.z
+        direction.x = cos(Math.toRadians(roll))
+        direction.y = sin(Math.toRadians(roll))
+        direction.z = 0f
+        direction.normalize()
+
         model.identity()
             .translate(position)
             .rotate(Math.toRadians(roll - 90f), 0f, 0f, 1f)

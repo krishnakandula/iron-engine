@@ -12,6 +12,15 @@ fun Vector4f.xyz(): Vector3f = Vector3f(this.x, this.y, this.z)
 
 fun Float.clamp(min: Float, max: Float): Float = this.coerceAtMost(max).coerceAtLeast(min)
 
+fun Vector3f.clamp(max: Float): Vector3f {
+    val maxSquared = max * max
+    if (this.lengthSquared() > maxSquared) {
+        this.normalize(max)
+    }
+
+    return this
+}
+
 operator fun Vector3f.times(scalar: Float): Vector3f {
     val result: Vector3f = this.clone()
     result *= scalar

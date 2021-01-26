@@ -7,17 +7,27 @@ import com.krishnakandula.ironengine.ecs.component.Archetype
 import com.krishnakandula.ironengine.ecs.component.ComponentManager
 import com.krishnakandula.ironengine.graphics.DebugRenderer
 import com.krishnakandula.ironengine.physics.Transform
+import com.krishnakandula.ironengine.utils.clamp
 import com.krishnakandula.ironengine.utils.clone
-import com.krishnakandula.ironengine.utils.timesAssign
+import com.krishnakandula.ironengine.utils.times
 import org.joml.Vector3f
-import kotlin.math.atan2
 
-class CollisionSystem(private val spatialHash: SpatialHash2D, private val debugRenderer: DebugRenderer) : System {
+class CollisionSystem(
+    private val spatialHash: SpatialHash2D,
+    private val debugRenderer: DebugRenderer? = null
+) : System {
 
     private lateinit var componentManager: ComponentManager
     private val query: Archetype = Archetype(listOf(Transform.TYPE_ID, MovementComponent.TYPE_ID))
 
-    private val collisionDistanceSquared: Float = 3f
+    private val nearbyDistance: Float = 1.5f
+    private val collisionDistance: Float = .3f
+
+    private val steerForce: Float = .3f
+
+    private val cohesionWeight: Float = 0.2f
+    private val alignmentWeight: Float = 3.5f
+    private val separationWeight: Float = 0.5f
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -35,28 +45,24 @@ class CollisionSystem(private val spatialHash: SpatialHash2D, private val debugR
         for (i in 0..entities.lastIndex) {
             val entity: Entity = entities[i]
             val transform: Transform = componentManager.getComponent(entity) ?: continue
-
             spatialHash.updatePosition(entity, transform.position)
         }
 
-        // apply rules
-        alignmentRule(entities, 1f)
-//        avoidCollisionsRule(deltaTime, entities, 200f)
-        cohesionRule(entities, 1f)
-    }
 
-    private fun cohesionRule(entities: List<Entity>, multiplier: Float) {
         entities.parallelStream().forEach { entity ->
             val transform: Transform = componentManager.getComponent(entity) ?: return@forEach
             val movement: MovementComponent = componentManager.getComponent(entity) ?: return@forEach
 
+            // reset acceleration
+//            movement.acceleration.zero()
+
             // get nearby boids
             val nearbyBoids: List<Entity> = spatialHash.getNearby(transform.position)
-            if (nearbyBoids.size <= 1) {
-                return@forEach
-            }
-            var averageXPos = 0f
-            var averageYPos = 0f
+
+            var separation = Vector3f(0f)
+            var alignment = Vector3f(0f)
+            var cohesion = Vector3f(0f)
+
             var boidsCounted = 0
 
             for (i in 0..nearbyBoids.lastIndex) {
@@ -67,93 +73,52 @@ class CollisionSystem(private val spatialHash: SpatialHash2D, private val debugR
 
                 val otherTransform: Transform = componentManager.getComponent(otherBoid) ?: continue
 
-                // if the boid is close by, use its position when calculating the average flock position
-                if (transform.position.distanceSquared(otherTransform.position) <= collisionDistanceSquared) {
-                    averageXPos += otherTransform.position.x
-                    averageYPos += otherTransform.position.y
+                val distance = otherTransform.position.distanceSquared(transform.position)
+                if (distance <= nearbyDistance) {
+
+                    if (distance <= collisionDistance) {
+                        // calculate separation TODO: raycast
+                        val separationOffset: Vector3f = otherTransform.position.clone()
+                            .sub(transform.position)
+                        separation.sub(separationOffset)
+                    }
+
+                    // calculate cohesion
+                    cohesion.add(otherTransform.position)
+
+                    // calculate alignment
+                    alignment.add(otherTransform.direction)
+
                     ++boidsCounted
                 }
             }
 
-            if (boidsCounted == 0) {
-                return@forEach
-            }
+            if (boidsCounted == 0) return@forEach
 
-            averageXPos /= boidsCounted
-            averageYPos /= boidsCounted
+            separation = steerTowardsTarget(separation, transform.direction, movement.maxSpeed, steerForce)
+            separation *= separationWeight
 
-            val turnForce: Vector3f = Vector3f(averageXPos, averageYPos, 0f)
-                .sub(transform.position)
-                .mul(multiplier)
+            alignment = steerTowardsTarget(alignment, transform.direction, movement.maxSpeed, steerForce)
+            alignment *= alignmentWeight
 
+            cohesion.div(boidsCounted.toFloat()).sub(transform.position)
+            cohesion = steerTowardsTarget(cohesion, transform.direction, movement.maxSpeed, steerForce)
+            cohesion *= cohesionWeight
 
-            movement.acceleration.add(turnForce)
+            movement.acceleration.add(separation)
+            movement.acceleration.add(alignment)
+            movement.acceleration.add(cohesion)
         }
     }
 
-    private fun alignmentRule(entities: List<Entity>, multiplier: Float) {
-        entities.parallelStream().map { entity ->
-            val transform: Transform = componentManager.getComponent(entity) ?: return@map null
-            val movement: MovementComponent = componentManager.getComponent(entity) ?: return@map null
-
-            // find nearby entities
-            val nearbyBoids: List<Entity> = spatialHash.getNearby(transform.position)
-
-            val averageAcceleration = Vector3f(0f)
-            var numCounted = 0
-            for (i in 0..nearbyBoids.lastIndex) {
-                val otherBoid: Entity = nearbyBoids[i]
-                val otherTransform: Transform = componentManager.getComponent(otherBoid) ?: return@map null
-                val otherMovement: MovementComponent = componentManager.getComponent(otherBoid) ?: return@map null
-
-                if (transform.position.distanceSquared(otherTransform.position) <= collisionDistanceSquared) {
-                    averageAcceleration.add(otherMovement.acceleration)
-                    ++numCounted
-                }
-            }
-            if (numCounted == 0) return@map null
-
-            averageAcceleration.div(numCounted.toFloat())
-            averageAcceleration *= multiplier
-            averageAcceleration.sub(movement.acceleration)
-
-            Pair(movement, averageAcceleration)
-        }.forEach { movementAcceleration ->
-            if (movementAcceleration != null) {
-                val movement = movementAcceleration.first
-                val acceleration = movementAcceleration.second
-
-                movement.acceleration.add(acceleration)
-            }
+    private fun steerTowardsTarget(target: Vector3f, velocity: Vector3f, speed: Float, steerForce: Float): Vector3f {
+        if (target.lengthSquared() == 0f) {
+            return target
         }
-    }
 
-    private fun avoidCollisionsRule(deltaTime: Double, entities: List<Entity>, multiplier: Float) {
-        entities.stream().forEach { entity ->
-            val transform: Transform = componentManager.getComponent(entity) ?: return@forEach
-
-            for (i in 0..entities.lastIndex) {
-                val otherEntity: Entity = entities[i]
-                if (otherEntity == entity) {
-                    continue
-                }
-
-                val otherTransform: Transform = componentManager.getComponent(otherEntity) ?: return@forEach
-                if (otherTransform.position.distanceSquared(transform.position) <= collisionDistanceSquared) {
-                    transform.rotate(0f, 0f, 1f * deltaTime.toFloat() * multiplier)
-                }
-            }
-
-            transform.updateModel()
-        }
-    }
-
-    private fun steerTowards(deltaTime: Double, transform: Transform, targetDirection: Vector3f, multiplier: Float) {
-        val transformDirection: Vector3f = transform.direction.clone().normalize()
-        targetDirection.normalize()
-        val angle = atan2(targetDirection.y - transformDirection.y, targetDirection.x - transformDirection.x)
-        println(angle)
-        transform.rotate(0f, 0f, angle * (180f / 3.1415f) * deltaTime.toFloat() * multiplier)
-        transform.updateModel()
+        target.normalize().mul(speed)
+        val velocityWithMagnitude = velocity.clone().normalize().mul(speed)
+        target.sub(velocityWithMagnitude).clamp(steerForce)
+        return target
     }
 }

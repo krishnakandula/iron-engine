@@ -46,12 +46,12 @@ class Game {
         val debugRenderer = DebugRenderer(camera, shader)
 
         init {
-            (0 until 200).forEach { _ ->
+            (0 until 300).forEach { _ ->
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 
                 // randomize acceleration
-                val acceleration = Vector3f(getRandInRange(-1f, 1f), getRandInRange(-1f, 1f), 0f)
+                val acceleration = Vector3f(getRandInRange(-10f, 10f), getRandInRange(-5f, 5f), 0f)
 
                 createBoid(
                     Vector3f(startPositionX, startPositionY, 0f),

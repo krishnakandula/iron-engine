@@ -8,7 +8,6 @@ import com.krishnakandula.ironengine.ecs.component.ComponentManager
 import com.krishnakandula.ironengine.physics.Transform
 import com.krishnakandula.ironengine.utils.clamp
 import com.krishnakandula.ironengine.utils.times
-import com.krishnakandula.ironengine.utils.timesAssign
 import org.joml.Vector3f
 
 class MovementSystem(private val worldXBoundary: Float, private val worldYBoundary: Float) : System {
@@ -29,14 +28,17 @@ class MovementSystem(private val worldXBoundary: Float, private val worldYBounda
             val transform: Transform = componentManager.getComponent(entity) ?: return@forEach
             val movement: MovementComponent = componentManager.getComponent(entity) ?: return@forEach
 
-            val velocity: Vector3f = movement.acceleration * deltaTime.toFloat()
-            velocity.normalize(movement.maxSpeed)
+            val velocity: Vector3f = transform.direction * (deltaTime.toFloat() * movement.maxSpeed)
 
-            // set rotation based on velocity
-            transform.setLookRotation(velocity)
-            velocity *= deltaTime.toFloat()
+            val acceleration: Vector3f = movement.acceleration * (deltaTime.toFloat() * deltaTime.toFloat() * 0.5f)
+            velocity.add(acceleration)
+            velocity.clamp(movement.maxSpeed * deltaTime.toFloat())
 
             transform.translate(velocity)
+
+            // set rotation based on velocity
+            transform.setLookRotation(velocity.normalize())
+
 
             // check if boid is past world boundary
             val position = transform.position
