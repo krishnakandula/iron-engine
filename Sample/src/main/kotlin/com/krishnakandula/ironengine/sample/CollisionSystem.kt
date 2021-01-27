@@ -20,14 +20,14 @@ class CollisionSystem(
     private lateinit var componentManager: ComponentManager
     private val query: Archetype = Archetype(listOf(Transform.TYPE_ID, MovementComponent.TYPE_ID))
 
-    private val nearbyDistance: Float = 1.5f
-    private val collisionDistance: Float = .3f
+    private val nearbyDistance: Float = 2.5f
+    private val collisionDistance: Float = .5f
 
-    private val steerForce: Float = .3f
+    private val steerForce: Float = 5f
 
-    private val cohesionWeight: Float = 0.2f
-    private val alignmentWeight: Float = 3.5f
-    private val separationWeight: Float = 0.5f
+    private val cohesionWeight: Float = 1f
+    private val alignmentWeight: Float = 1f
+    private val separationWeight: Float = 2.4f
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -54,7 +54,7 @@ class CollisionSystem(
             val movement: MovementComponent = componentManager.getComponent(entity) ?: return@forEach
 
             // reset acceleration
-//            movement.acceleration.zero()
+            movement.acceleration.zero()
 
             // get nearby boids
             val nearbyBoids: List<Entity> = spatialHash.getNearby(transform.position)
@@ -77,10 +77,12 @@ class CollisionSystem(
                 if (distance <= nearbyDistance) {
 
                     if (distance <= collisionDistance) {
-                        // calculate separation TODO: raycast
+                        // calculate separation
                         val separationOffset: Vector3f = otherTransform.position.clone()
                             .sub(transform.position)
-                        separation.sub(separationOffset)
+                            .normalize()
+                            .mul(-1f)
+                        separation.add(separationOffset)
                     }
 
                     // calculate cohesion
@@ -95,14 +97,14 @@ class CollisionSystem(
 
             if (boidsCounted == 0) return@forEach
 
-            separation = steerTowardsTarget(separation, transform.direction, movement.maxSpeed, steerForce)
+            separation = steerTowardsTarget(separation, movement.velocity, movement.maxSpeed, steerForce)
             separation *= separationWeight
 
-            alignment = steerTowardsTarget(alignment, transform.direction, movement.maxSpeed, steerForce)
+            alignment = steerTowardsTarget(alignment, movement.velocity, movement.maxSpeed, steerForce)
             alignment *= alignmentWeight
 
-            cohesion.div(boidsCounted.toFloat()).sub(transform.position)
-            cohesion = steerTowardsTarget(cohesion, transform.direction, movement.maxSpeed, steerForce)
+            cohesion.div(boidsCounted.toFloat())
+            cohesion = steerTowardsTarget(cohesion.sub(transform.position), movement.velocity, movement.maxSpeed, steerForce)
             cohesion *= cohesionWeight
 
             movement.acceleration.add(separation)
@@ -111,14 +113,9 @@ class CollisionSystem(
         }
     }
 
-    private fun steerTowardsTarget(target: Vector3f, velocity: Vector3f, speed: Float, steerForce: Float): Vector3f {
-        if (target.lengthSquared() == 0f) {
-            return target
-        }
-
-        target.normalize().mul(speed)
-        val velocityWithMagnitude = velocity.clone().normalize().mul(speed)
-        target.sub(velocityWithMagnitude).clamp(steerForce)
-        return target
+    private fun steerTowardsTarget(target: Vector3f, velocity: Vector3f, maxSpeed: Float, steerForce: Float): Vector3f {
+        if (target.lengthSquared() == 0f) return target
+        val desiredVelocity: Vector3f = target.normalize().mul(maxSpeed)
+        return desiredVelocity.sub(velocity).clamp(0.1f, steerForce)
     }
 }

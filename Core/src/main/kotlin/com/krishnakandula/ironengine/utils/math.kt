@@ -12,10 +12,21 @@ fun Vector4f.xyz(): Vector3f = Vector3f(this.x, this.y, this.z)
 
 fun Float.clamp(min: Float, max: Float): Float = this.coerceAtMost(max).coerceAtLeast(min)
 
-fun Vector3f.clamp(max: Float): Vector3f {
+fun Vector3f.clamp(min: Float, max: Float): Vector3f {
+    if (max == 0f) {
+        this.zero()
+        return this
+    }
+
+    val lengthSquared = this.lengthSquared()
+    val minSquared = min * min
     val maxSquared = max * max
-    if (this.lengthSquared() > maxSquared) {
+
+    if (lengthSquared > maxSquared) {
         this.normalize(max)
+    }
+    if (lengthSquared < minSquared && min != 0f) {
+        this.normalize(min)
     }
 
     return this
