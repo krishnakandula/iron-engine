@@ -2,7 +2,7 @@ package com.krishnakandula.ironengine.sample
 
 import com.krishnakandula.ironengine.ecs.Entity
 import com.krishnakandula.ironengine.ecs.System
-import com.krishnakandula.ironengine.graphics.DebugRenderer
+import com.krishnakandula.ironengine.graphics.rendering.DebugRenderer
 import org.joml.Vector3f
 
 class SpatialHash2D(

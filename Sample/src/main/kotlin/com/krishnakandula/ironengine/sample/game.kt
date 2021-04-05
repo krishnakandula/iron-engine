@@ -3,9 +3,9 @@ package com.krishnakandula.ironengine.sample
 import com.krishnakandula.ironengine.Window
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.SceneManager
-import com.krishnakandula.ironengine.graphics.DebugRenderer
+import com.krishnakandula.ironengine.graphics.rendering.DebugRenderer
 import com.krishnakandula.ironengine.graphics.Mesh
-import com.krishnakandula.ironengine.graphics.RenderingSystem
+import com.krishnakandula.ironengine.graphics.rendering.Renderer
 import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.OrthographicCamera
 import com.krishnakandula.ironengine.physics.Transform
@@ -46,7 +46,7 @@ class Game {
         val debugRenderer = DebugRenderer(camera, shader)
 
         init {
-            (0 until 150).forEach { _ ->
+            (0 until 300).forEach { _ ->
                 val startPositionX = getRandInRange(-worldWidth / 2f, worldWidth / 2f)
                 val startPositionY = getRandInRange(-worldHeight / 2f, worldHeight / 2f)
 
@@ -63,7 +63,7 @@ class Game {
 
 
             val spatialHash2D = SpatialHash2D(worldWidth, worldHeight, 1, 1, debugRenderer)
-            addSystem(RenderingSystem(camera, shader))
+            addSystem(Renderer(camera, shader))
             addSystem(CollisionSystem(spatialHash2D, debugRenderer))
             addSystem(MovementSystem(worldWidth / 2f, worldHeight / 2f))
             addSystem(spatialHash2D)

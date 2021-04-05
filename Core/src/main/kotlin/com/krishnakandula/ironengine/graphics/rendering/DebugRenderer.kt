@@ -1,11 +1,12 @@
-package com.krishnakandula.ironengine.graphics
+package com.krishnakandula.ironengine.graphics.rendering
 
+import com.krishnakandula.ironengine.graphics.Mesh
+import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.Camera
 import org.joml.Math
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11C.GL_LINES
-import org.lwjgl.opengl.GL11C.GL_POINTS
 import org.lwjgl.opengl.GL11C.GL_UNSIGNED_INT
 import org.lwjgl.opengl.GL11C.glDrawElements
 import kotlin.math.atan2

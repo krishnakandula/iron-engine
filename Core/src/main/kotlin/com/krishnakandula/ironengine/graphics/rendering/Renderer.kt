@@ -1,18 +1,21 @@
-package com.krishnakandula.ironengine.graphics
+package com.krishnakandula.ironengine.graphics.rendering
 
 import com.krishnakandula.ironengine.ecs.Entity
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.ecs.component.Archetype
 import com.krishnakandula.ironengine.ecs.component.ComponentManager
+import com.krishnakandula.ironengine.graphics.Mesh
+import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.Camera
 import com.krishnakandula.ironengine.physics.Transform
 import org.lwjgl.opengl.GL11C.GL_TRIANGLES
 import org.lwjgl.opengl.GL11C.GL_UNSIGNED_INT
 import org.lwjgl.opengl.GL11C.glDrawElements
 
-class RenderingSystem(private val camera: Camera,
-                      private val shader: Shader) : System {
+class Renderer(private val camera: Camera,
+               private val shader: Shader
+) : System {
 
     private lateinit var componentManager: ComponentManager
     private val requiredComponents: Archetype = Archetype(listOf(

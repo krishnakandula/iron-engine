@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     kotlin("jvm")
 }
@@ -9,8 +12,12 @@ repositories {
     mavenCentral()
 }
 
-val lwjglVersion = "3.2.3"
-val lwjglNatives = "natives-windows"
+val lwjglVersion = "3.3.0-SNAPSHOT"
+val lwjglNatives = when (OperatingSystem.current()) {
+    OperatingSystem.MAC_OS  -> "natives-macos-arm64"
+    OperatingSystem.WINDOWS -> "natives-windows"
+    else -> throw Error("Unrecognized or unsupported Operating system. Please set \"lwjglNatives\" manually")
+}
 
 dependencies {
     api(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
@@ -29,4 +36,13 @@ dependencies {
     runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
+    implementation(kotlin("stdlib-jdk8"))
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }

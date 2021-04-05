@@ -5,7 +5,7 @@ import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.ecs.component.Archetype
 import com.krishnakandula.ironengine.ecs.component.ComponentManager
-import com.krishnakandula.ironengine.graphics.DebugRenderer
+import com.krishnakandula.ironengine.graphics.rendering.DebugRenderer
 import com.krishnakandula.ironengine.physics.Transform
 import com.krishnakandula.ironengine.utils.clamp
 import com.krishnakandula.ironengine.utils.clone
@@ -21,13 +21,13 @@ class CollisionSystem(
     private val query: Archetype = Archetype(listOf(Transform.TYPE_ID, MovementComponent.TYPE_ID))
 
     private val nearbyDistance: Float = 2.5f
-    private val collisionDistance: Float = .5f
+    private val separationDistance: Float = .3f
 
     private val steerForce: Float = 5f
 
     private val cohesionWeight: Float = 1f
     private val alignmentWeight: Float = 1f
-    private val separationWeight: Float = 2.4f
+    private val separationWeight: Float = 2.8f
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -76,7 +76,7 @@ class CollisionSystem(
                 val distance = otherTransform.position.distanceSquared(transform.position)
                 if (distance <= nearbyDistance) {
 
-                    if (distance <= collisionDistance) {
+                    if (distance <= separationDistance) {
                         // calculate separation
                         val separationOffset: Vector3f = otherTransform.position.clone()
                             .sub(transform.position)

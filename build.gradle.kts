@@ -16,6 +16,7 @@ allprojects {
         maven {
             setUrl("https://jitpack.io")
         }
+        maven("https://oss.sonatype.org/content/repositories/snapshots/")
     }
 
     tasks.withType<KotlinCompile> {
