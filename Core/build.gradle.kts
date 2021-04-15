@@ -37,6 +37,9 @@ dependencies {
     runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
     runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
     implementation(kotlin("stdlib-jdk8"))
+
+    implementation("com.fasterxml.jackson.core", "jackson-core", "2.12.3")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
