@@ -1,32 +1,47 @@
 package com.krishnakandula.ironengine.graphics.textures
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import java.io.File
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.krishnakandula.ironengine.utils.JsonHelper
 import org.lwjgl.opengl.GL11.GL_RGB
 
 class SpriteSheet(
     rootFilePath: String,
     spriteSheetName: String,
-    textureLoader: TextureLoader
+    textureLoader: TextureLoader,
+    jsonHelper: JsonHelper
 ) {
 
-    private val texture: Texture = textureLoader.loadTexture(
+    val texture: Texture = textureLoader.loadTexture(
         "${rootFilePath}${spriteSheetName}.png",
         0,
         GL_RGB,
-        false)
-    private val objectMapper: ObjectMapper = ObjectMapper().registerKotlinModule()
-    private val sprites: MutableMap<String, SpriteData> = HashMap()
+        false
+    )
+    private val sprites: Map<String, SpriteData>
+    private val spriteSheetData: SpriteSheetData
 
     init {
         val dataFilePath = "${rootFilePath}${spriteSheetName}.json"
-        val jsonData = File(dataFilePath).readText()
-        val spriteSheetData = objectMapper.readValue(jsonData, SpriteSheetData::class.java)
-        spriteSheetData.frames.forEach { frame ->
-           sprites[frame.filename] = frame
-        }
+        spriteSheetData = jsonHelper.readFromFile(dataFilePath)
+        sprites = spriteSheetData.frames.associateBy { frame -> frame.filename }
     }
+
+    operator fun get(spriteName: String): Sprite? {
+        val spriteData = sprites[spriteName] ?: return null
+        val width = spriteSheetData.meta.size.w.toFloat()
+        val height = spriteSheetData.meta.size.h.toFloat()
+
+        return Sprite(
+            this,
+            spriteName,
+            spriteData.frame.x / width,
+            spriteData.frame.y / height,
+            (spriteData.frame.x + spriteData.frame.w - 1) / width,
+            (spriteData.frame.y + spriteData.frame.h - 1) / height
+        )
+    }
+
+    fun getAllSprites(): Collection<SpriteData> = sprites.values
 
     data class SpriteSheetData(
         val frames: Array<SpriteData>,
@@ -46,5 +61,6 @@ class SpriteSheet(
 
     data class Size(val w: Int, val h: Int)
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class Metadata(val image: String, val size: Size)
 }

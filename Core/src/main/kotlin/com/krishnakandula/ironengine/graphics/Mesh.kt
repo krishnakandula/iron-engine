@@ -45,6 +45,9 @@ class Mesh(
         glVertexAttribPointer(0, vecSize, GL_FLOAT, false, stride * Float.SIZE_BYTES, 0)
         glEnableVertexAttribArray(0)
 
+//        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride * Float.SIZE_BYTES, 3)
+//        glEnableVertexAttribArray(1)
+
         // bind EBO
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)

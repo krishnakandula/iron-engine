@@ -32,6 +32,18 @@ fun Vector3f.clamp(min: Float, max: Float): Vector3f {
     return this
 }
 
+operator fun Vector3f.times(mat: Matrix4f): Vector3f {
+    val x = (this[0] * mat.m00()) + (this[1] * mat.m10()) + (this[2] * mat.m20()) + (1.0 * mat.m30())
+    val y = (this[0] * mat.m01()) + (this[1] * mat.m11()) + (this[2] * mat.m21()) + (1.0 * mat.m31())
+    val z = (this[0] * mat.m02()) + (this[1] * mat.m12()) + (this[2] * mat.m22()) + (1.0 * mat.m32())
+
+    this.x = x.toFloat()
+    this.y = y.toFloat()
+    this.z = z.toFloat()
+
+    return this
+}
+
 operator fun Vector3f.times(scalar: Float): Vector3f {
     val result: Vector3f = this.clone()
     result *= scalar
