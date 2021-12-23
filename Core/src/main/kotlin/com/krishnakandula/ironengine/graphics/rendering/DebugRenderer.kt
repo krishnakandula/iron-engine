@@ -19,7 +19,7 @@ class DebugRenderer(private val camera: Camera, private val shader: Shader) {
             0.0f, 0.5f, 0.0f
         )
         val indices: IntArray = intArrayOf(0, 1)
-        val mesh: Mesh = Mesh(vertices, indices, 3, 3)
+        val mesh: Mesh = Mesh(vertices, indices, )
     }
 
     object Point {
@@ -27,7 +27,7 @@ class DebugRenderer(private val camera: Camera, private val shader: Shader) {
             0f, 0f, 0f
         )
         val indices: IntArray = intArrayOf(0)
-        val mesh: Mesh = Mesh(vertices, indices, 3, 3)
+        val mesh: Mesh = Mesh(vertices, indices, )
     }
 
     fun drawLine(start: Vector3f, end: Vector3f) {

@@ -3,13 +3,11 @@ package com.krishnakandula.ironengine.graphics
 import com.krishnakandula.ironengine.ecs.component.Component
 import org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER
 import org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER
-import org.lwjgl.opengl.GL15.GL_FLOAT
 import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
 import org.lwjgl.opengl.GL15.glBindBuffer
 import org.lwjgl.opengl.GL15.glBufferData
 import org.lwjgl.opengl.GL15.glDeleteBuffers
 import org.lwjgl.opengl.GL15.glGenBuffers
-import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glDeleteVertexArrays
 import org.lwjgl.opengl.GL30.glEnableVertexAttribArray
@@ -19,8 +17,7 @@ import org.lwjgl.opengl.GL30.glVertexAttribPointer
 class Mesh(
     vertices: FloatArray,
     indices: IntArray,
-    vecSize: Int,
-    stride: Int
+    vararg vertexAttributes: VertexAttribute,
 ) : Component(TYPE_ID) {
 
     companion object {
@@ -30,43 +27,34 @@ class Mesh(
     private val vao: Int = glGenVertexArrays()
     private val vbo: Int = glGenBuffers()
     private val ebo: Int = glGenBuffers()
-    private var vertices: FloatArray
-    private var indices: IntArray
 
-    val vertexCount: Int = vertices.size
-    val indexCount: Int = indices.size
+    var vertexCount: Int = vertices.size
+        private set
+
+    var indexCount: Int = indices.size
+        private set
 
 
     init {
-
-        // bind VAO
-        glBindVertexArray(vao)
-
-        // bind VBO
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW)
-        glVertexAttribPointer(0, vecSize, GL_FLOAT, false, stride * Float.SIZE_BYTES, 0)
-        glEnableVertexAttribArray(0)
-
-//        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride * Float.SIZE_BYTES, 3)
-//        glEnableVertexAttribArray(1)
-
-        // bind EBO
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW)
-
-        // unbind VBO but not VBO
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-        // unbind VAOS
-        glBindVertexArray(0)
+        update(vertices = vertices, indices = indices, vertexAttributes = vertexAttributes)
     }
 
-    fun setVertices(
+    fun update(
+        vertices: FloatArray,
+        indices: IntArray,
+        usage: Int = GL_STATIC_DRAW,
+        vararg vertexAttributes: VertexAttribute
+    ) {
+        setVertices(vertices, usage, vertexAttributes = vertexAttributes)
+        setIndices(indices, usage)
+    }
+
+    private fun setVertices(
         vertices: FloatArray,
         usage: Int = GL_STATIC_DRAW,
         vararg vertexAttributes: VertexAttribute
     ) {
+        this.vertexCount = vertices.size
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferData(GL_ARRAY_BUFFER, vertices, usage)
         vertexAttributes.forEach { vertexAttrib ->
@@ -80,9 +68,11 @@ class Mesh(
             )
             glEnableVertexAttribArray(vertexAttrib.index)
         }
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
     }
 
-    fun setIndices(indices: IntArray, usage: Int = GL_STATIC_DRAW) {
+    private fun setIndices(indices: IntArray, usage: Int = GL_STATIC_DRAW) {
+        this.indexCount = indices.size
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo)
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, usage)
     }
@@ -93,6 +83,7 @@ class Mesh(
 
     fun unbind() {
         glBindVertexArray(0)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     }
 
     override fun dispose() {

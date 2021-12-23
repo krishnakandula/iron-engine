@@ -8,7 +8,7 @@ class ComponentManager {
 
     private val components: MutableMap<Class<out Component>, ComponentMapper<out Component>> = mutableMapOf()
 
-    inline fun < reified T : Component> addComponent(entity: Entity, component: T) {
+    inline fun <reified T : Component> addComponent(entity: Entity, component: T) {
         addComponent(entity, component, T::class.java)
     }
 

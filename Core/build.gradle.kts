@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.gradle.internal.os.OperatingSystem
 
 plugins {
     kotlin("jvm")
@@ -13,11 +12,7 @@ repositories {
 }
 
 val lwjglVersion = "3.3.0-SNAPSHOT"
-val lwjglNatives = when (OperatingSystem.current()) {
-    OperatingSystem.MAC_OS  -> "natives-macos-arm64"
-    OperatingSystem.WINDOWS -> "natives-windows"
-    else -> throw Error("Unrecognized or unsupported Operating system. Please set \"lwjglNatives\" manually")
-}
+val lwjglNatives = "natives-windows"
 
 dependencies {
     api(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))

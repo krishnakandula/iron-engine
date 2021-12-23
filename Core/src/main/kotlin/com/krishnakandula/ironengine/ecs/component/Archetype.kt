@@ -3,7 +3,7 @@ package com.krishnakandula.ironengine.ecs.component
 import com.krishnakandula.ironengine.utils.BitSet
 
 class Archetype(componentTypeIds: List<Int>? = null,
-                internal val componentsMask: BitSet = BitSet()) {
+                internal val componentsMask: BitSet = BitSet()) : Cloneable {
 
     init {
         if (componentTypeIds != null) {
@@ -32,7 +32,7 @@ class Archetype(componentTypeIds: List<Int>? = null,
         return componentsMask.isSubsetOf(required.componentsMask)
     }
 
-    internal fun clone(): Archetype = Archetype(componentsMask = componentsMask.clone())
+    public override fun clone(): Archetype = Archetype(componentsMask = componentsMask.clone())
 
     override fun hashCode(): Int = componentsMask.hashCode()
 

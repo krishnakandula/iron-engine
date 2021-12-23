@@ -2,7 +2,6 @@ package com.krishnakandula.ironengine.graphics.textures
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.krishnakandula.ironengine.utils.JsonHelper
-import org.lwjgl.opengl.GL11.GL_RGB
 
 class SpriteSheet(
     rootFilePath: String,
@@ -11,12 +10,10 @@ class SpriteSheet(
     jsonHelper: JsonHelper
 ) {
 
-    val texture: Texture = textureLoader.loadTexture(
+    private val texture: Texture = textureLoader.loadTexture(
         "${rootFilePath}${spriteSheetName}.png",
-        0,
-        GL_RGB,
-        false
-    )
+        1,
+        false)
     private val sprites: Map<String, SpriteData>
     private val spriteSheetData: SpriteSheetData
 
@@ -24,20 +21,21 @@ class SpriteSheet(
         val dataFilePath = "${rootFilePath}${spriteSheetName}.json"
         spriteSheetData = jsonHelper.readFromFile(dataFilePath)
         sprites = spriteSheetData.frames.associateBy { frame -> frame.filename }
+        texture.bind(1)
     }
 
     operator fun get(spriteName: String): Sprite? {
         val spriteData = sprites[spriteName] ?: return null
-        val width = spriteSheetData.meta.size.w.toFloat()
-        val height = spriteSheetData.meta.size.h.toFloat()
+        val spriteSheetWidth = spriteSheetData.meta.size.w.toFloat()
+        val spriteSheetHeight = spriteSheetData.meta.size.h.toFloat()
 
         return Sprite(
             this,
             spriteName,
-            spriteData.frame.x / width,
-            spriteData.frame.y / height,
-            (spriteData.frame.x + spriteData.frame.w - 1) / width,
-            (spriteData.frame.y + spriteData.frame.h - 1) / height
+            spriteData.frame.x.toFloat() / spriteSheetWidth,
+            (spriteData.frame.x.toFloat() + spriteData.frame.w - 1) / spriteSheetWidth,
+            spriteData.frame.y.toFloat() / spriteSheetHeight,
+            (spriteData.frame.y.toFloat() + spriteData.frame.h - 1) / spriteSheetHeight
         )
     }
 

@@ -7,6 +7,7 @@ import com.krishnakandula.ironengine.ecs.component.Archetype
 import com.krishnakandula.ironengine.ecs.component.ComponentManager
 import com.krishnakandula.ironengine.graphics.Mesh
 import com.krishnakandula.ironengine.graphics.Shader
+import com.krishnakandula.ironengine.graphics.VertexAttribute
 import com.krishnakandula.ironengine.graphics.camera.Camera
 import com.krishnakandula.ironengine.graphics.textures.Sprite
 import com.krishnakandula.ironengine.graphics.textures.Texture
@@ -15,6 +16,7 @@ import com.krishnakandula.ironengine.utils.clone
 import com.krishnakandula.ironengine.utils.times
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
 
 class SpriteBatchRenderer(
     private val shader: Shader,
@@ -22,16 +24,28 @@ class SpriteBatchRenderer(
 ) : System {
 
     companion object {
-        private const val MAX_SPRITES: Int = 32
+        private const val MAX_SPRITES: Int = 5
+
+        /*
+           Rect coordinates
+
+         0(-.5,.5)   1(.5,.5)
+            0-------0
+            |       |
+            |       |
+            |       |
+            0-------0
+         2(-.5,-.5)  3(.5,-.5)
+         */
         private val rect: Array<Vector3f> = arrayOf(
+            Vector3f(-0.5f, 0.5f, 0f),
             Vector3f(0.5f, 0.5f, 0f),
-            Vector3f(0.5f, -0.5f, 0f),
             Vector3f(-0.5f, -0.5f, 0f),
-            Vector3f(-0.5f, 0.5f, 0f)
+            Vector3f(0.5f, -0.5f, 0f),
         )
         private val rectIndices: IntArray = intArrayOf(
-            0, 1, 2,
-            2, 3, 0
+            0, 1, 3,
+            0, 3, 2
         )
     }
 
@@ -43,13 +57,40 @@ class SpriteBatchRenderer(
         )
     )
 
-    private val vertices: FloatArray = FloatArray(MAX_SPRITES * (4 * 3))
-    private val indices: IntArray = IntArray(MAX_SPRITES * 6)
+    private val mesh: Mesh
     private var verticesIndex: Int = 0
     private var indexCount = 0
     private var vertexCount = 0
     private var timesFlushed = 0
     private var lastTexture: Texture? = null
+    private val vertexAttributes: Array<VertexAttribute> = arrayOf(
+        // position
+        VertexAttribute(
+            index = 0,
+            size = 3,
+            type = GL_FLOAT,
+            normalized = false,
+            stride = 5 * Float.SIZE_BYTES,
+            pointer = 0L * Float.SIZE_BYTES
+        ),
+        // texture coordinates
+        VertexAttribute(
+            index = 1,
+            size = 2,
+            type = GL_FLOAT,
+            normalized = false,
+            stride = 5 * Float.SIZE_BYTES,
+            pointer = 3L * Float.SIZE_BYTES
+        )
+    )
+    private val vertices: FloatArray = FloatArray(MAX_SPRITES * (4 * 5))
+    private val indices: IntArray = IntArray(MAX_SPRITES * 6)
+
+    init {
+        mesh = Mesh(
+            vertices, indices, *vertexAttributes
+        )
+    }
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -65,7 +106,7 @@ class SpriteBatchRenderer(
         for (entity in entities) {
             val sprite = componentManager.getComponent<Sprite>(entity) ?: continue
             val transform = componentManager.getComponent<Transform>(entity) ?: continue
-            transform.updateModel()
+            // TODO: Sort sprites by depth
             draw(sprite, transform)
         }
         end()
@@ -78,29 +119,26 @@ class SpriteBatchRenderer(
     }
 
     private fun draw(sprite: Sprite, transform: Transform) {
-        if (lastTexture == null) lastTexture = sprite.spriteSheet.texture
-
-        if (verticesIndex + (4 * 3) > vertices.size || lastTexture != sprite.spriteSheet.texture) {
-            flush()
-            lastTexture = sprite.spriteSheet.texture
-        }
-
         // pos (3) + texture coordinates(2)
         val v1 = rect[0].clone() * transform.model
         val v2 = rect[1].clone() * transform.model
         val v3 = rect[2].clone() * transform.model
         val v4 = rect[3].clone() * transform.model
 
+        // Add data for each vertex
         addPos(v1)
-//        addTexCoord(sprite.x1, sprite.y1)
+        addTexCoord(sprite.x2, sprite.y1)
         addPos(v2)
-//        addTexCoord(sprite.x1, sprite.y2)
+        addTexCoord(sprite.x2, sprite.y2)
         addPos(v3)
-//        addTexCoord(sprite.x2, sprite.y1)
+        addTexCoord(sprite.x1, sprite.y1)
         addPos(v4)
-//        addTexCoord(sprite.x2, sprite.y2)
+        addTexCoord(sprite.x1, sprite.y2)
 
-        // add indices
+        /*
+        Add indices to index buffer. vertexCount tracks which vertex the index should refer to.
+        Each rect has 4 vertices, so we increment by 4 after adding all indices.
+         */
         indices[indexCount++] = rectIndices[0] + vertexCount
         indices[indexCount++] = rectIndices[1] + vertexCount
         indices[indexCount++] = rectIndices[2] + vertexCount
@@ -109,8 +147,6 @@ class SpriteBatchRenderer(
         indices[indexCount++] = rectIndices[5] + vertexCount
 
         vertexCount += 4
-
-        lastTexture = sprite.spriteSheet.texture
     }
 
     private fun addPos(vec: Vector3f) {
@@ -133,8 +169,8 @@ class SpriteBatchRenderer(
     private fun flush() {
         ++timesFlushed
 
-        val mesh = Mesh(vertices, indices, 3, 3)
         mesh.bind()
+        mesh.update(vertices, indices, GL_STATIC_DRAW, *vertexAttributes)
         glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0)
         mesh.unbind()
 

@@ -14,7 +14,7 @@ import org.joml.Vector3f
 import org.lwjgl.glfw.GLFW
 
 fun main() {
-    val window = Window(500, 500, "Roguelike")
+    val window = Window(1000, 1000, "Roguelike")
     val sceneManager = SceneManager(1, window)
     sceneManager.push(StartScene(window))
     while (!window.shouldClose()) {
@@ -35,14 +35,23 @@ class StartScene(private val window: Window) : Scene() {
         JsonHelper())
     private val cameraSpeed = 10f
     init {
+        camera.transform.rotate(0f, 0f, 90f)
+        camera.updateView()
+        shader.setMat4("view", camera.view)
+        addSystem(SpriteBatchRenderer(shader, camera))
         val heroSprite = spriteSheet["Player.png"]
-
-        (0..10).forEach {
+        (0..4).forEach {
             val enemy = entityManager.createEntity()
             if (heroSprite != null) componentManager.addComponent(enemy, heroSprite)
-            componentManager.addComponent(enemy, Transform(Vector3f(it.toFloat(), it.toFloat(), 0f)))
-            addSystem(SpriteBatchRenderer(shader, camera))
+            val transform = Transform(Vector3f(it.toFloat(), it.toFloat(), 0f))
+            componentManager.addComponent(enemy, transform)
         }
+    }
+
+    override fun update(deltaTime: Double) {
+        camera.transform.rotate(0f, 0f, 100f * deltaTime.toFloat())
+        camera.updateView()
+        super.update(deltaTime)
     }
 
     override fun fixedUpdate(deltaTime: Double) {
@@ -66,7 +75,6 @@ class StartScene(private val window: Window) : Scene() {
         }
 
         if (cameraTransformDirty) {
-            println(camera.transform.position)
             camera.updateView()
             shader.setMat4("view", camera.view)
         }

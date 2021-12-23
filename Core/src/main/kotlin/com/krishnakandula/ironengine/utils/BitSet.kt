@@ -1,8 +1,8 @@
 package com.krishnakandula.ironengine.utils
 
-class BitSet {
+class BitSet : Cloneable {
 
-    private var words: LongArray = LongArray(4)
+    private val words: LongArray = LongArray(4)
 
     fun get(index: Int): Boolean {
         return if (index >= size()) {
@@ -51,7 +51,7 @@ class BitSet {
         return true
     }
 
-    fun clone(): BitSet {
+    public override fun clone(): BitSet {
         val clone = BitSet()
         for (i in 0..words.lastIndex) {
             clone.words[i] = words[i]

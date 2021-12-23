@@ -13,15 +13,18 @@ import org.lwjgl.opengl.GL11C.GL_TRIANGLES
 import org.lwjgl.opengl.GL11C.GL_UNSIGNED_INT
 import org.lwjgl.opengl.GL11C.glDrawElements
 
-class Renderer(private val camera: Camera,
-               private val shader: Shader
+class Renderer(
+    private val camera: Camera,
+    private val shader: Shader
 ) : System {
 
     private lateinit var componentManager: ComponentManager
-    private val requiredComponents: Archetype = Archetype(listOf(
-        Transform.TYPE_ID,
-        Mesh.TYPE_ID
-    ))
+    private val requiredComponents: Archetype = Archetype(
+        listOf(
+            Transform.TYPE_ID,
+            Mesh.TYPE_ID
+        )
+    )
 
     override fun onAddedToScene(scene: Scene) {
         super.onAddedToScene(scene)
@@ -37,17 +40,26 @@ class Renderer(private val camera: Camera,
         shader.setMat4("projection", camera.projection)
         shader.setMat4("view", camera.view)
 
-        for (i in 0..entities.lastIndex) {
-            val entity = entities[i]
+        entities
+            // First, find all entities that have a root transform (i.e. an entity whose transform
+            // component doesn't have a parent).
+            .filter(this::entityWithNoParentTransform)
+            // Now, recursively render the entity and all of it's children
+            .forEach(this::renderEntity)
+    }
 
-            val transform = componentManager.getComponent<Transform>(entity) ?: continue
-            val mesh = componentManager.getComponent<Mesh>(entity) ?: continue
+    private fun entityWithNoParentTransform(entity: Entity): Boolean {
+        val transform = componentManager.getComponent<Transform>(entity) ?: return false
+        return transform.parent == null
+    }
 
-            transform.updateModel()
-            mesh.bind()
-            shader.setMat4("model", transform.model)
-            glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0)
-            mesh.unbind()
-        }
+    private fun renderEntity(entity: Entity) {
+        val transform = componentManager.getComponent<Transform>(entity) ?: return
+        val mesh = componentManager.getComponent<Mesh>(entity) ?: return
+
+        mesh.bind()
+        shader.setMat4("model", transform.model)
+        glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0)
+        mesh.unbind()
     }
 }

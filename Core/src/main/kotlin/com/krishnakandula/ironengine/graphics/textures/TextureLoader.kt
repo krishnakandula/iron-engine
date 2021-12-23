@@ -1,14 +1,10 @@
 package com.krishnakandula.ironengine.graphics.textures
 
+import org.lwjgl.opengl.GL11.*
 import java.nio.ByteBuffer
 import java.nio.IntBuffer
-import org.lwjgl.opengl.GL11.GL_RGB
-import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
-import org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE
-import org.lwjgl.opengl.GL11.glBindTexture
-import org.lwjgl.opengl.GL11.glGenTextures
-import org.lwjgl.opengl.GL11.glTexImage2D
 import org.lwjgl.opengl.GL13.glActiveTexture
+import org.lwjgl.opengl.GL30.GL_RG
 import org.lwjgl.opengl.GL30.glGenerateMipmap
 
 import org.lwjgl.stb.STBImage.*
@@ -17,24 +13,32 @@ import org.lwjgl.system.MemoryStack
 class TextureLoader {
 
     private val cache: MutableMap<String, Texture> = HashMap()
+    private val channelsToImageFormatMap = mapOf(
+        Pair(1, GL_RED),
+        Pair(2, GL_RG),
+        Pair(3, GL_RGB),
+        Pair(4, GL_RGBA)
+    )
 
     fun loadTexture(
         filePath: String,
         activeTexture: Int,
-        imageFormat: Int,
         flip: Boolean
     ): Texture {
         if (!cache.containsKey(filePath)) {
             stbi_set_flip_vertically_on_load(flip)
             val rawTexture: RawTexture = loadTextureData(filePath)
             val textureId: Int = glGenTextures()
+            val imageFormat = channelsToImageFormatMap[rawTexture.channels] ?:
+            throw RuntimeException("Unable to load texture with path $filePath. Invalid" +
+                    "number of channels read.")
 
             glActiveTexture(activeTexture)
             glBindTexture(GL_TEXTURE_2D, textureId)
             glTexImage2D(
                 GL_TEXTURE_2D,
                 0,
-                GL_RGB,
+                imageFormat,
                 rawTexture.width,
                 rawTexture.height,
                 0,
@@ -58,11 +62,9 @@ class TextureLoader {
             val numChannels: IntBuffer = stack.mallocInt(1)
 
             val data = stbi_load(filePath, width, height, numChannels, 0)
-            if (data != null) {
-                return RawTexture(width.get(), height.get(), numChannels.get(), data)
-            }
+                ?: throw RuntimeException("Unable to load texture with path $filePath")
 
-            throw RuntimeException("Unable to load texture with path $filePath")
+            return RawTexture(width.get(), height.get(), numChannels.get(), data)
         }
     }
 
