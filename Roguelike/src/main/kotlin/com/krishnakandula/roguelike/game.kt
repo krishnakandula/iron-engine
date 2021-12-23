@@ -1,8 +1,10 @@
 package com.krishnakandula.roguelike
 
 import com.krishnakandula.ironengine.Window
+import com.krishnakandula.ironengine.ecs.Entity
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.SceneManager
+import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.OrthographicCamera
 import com.krishnakandula.ironengine.graphics.rendering.SpriteBatchRenderer
@@ -32,19 +34,36 @@ class StartScene(private val window: Window) : Scene() {
         "Roguelike/src/main/resources/textures/",
         "spritesheet",
         TextureLoader(),
-        JsonHelper())
+        JsonHelper()
+    )
     private val cameraSpeed = 10f
+
     init {
         camera.transform.rotate(0f, 0f, 90f)
         camera.updateView()
         shader.setMat4("view", camera.view)
         addSystem(SpriteBatchRenderer(shader, camera))
-        val heroSprite = spriteSheet["Player.png"]
-        (0..4).forEach {
-            val enemy = entityManager.createEntity()
+        val heroSprite = spriteSheet["Grass.png"]
+        var rootTransform: Transform? = null
+        val entities = entityManager.createEntities(4)
+        entities.forEachIndexed { i, enemy ->
             if (heroSprite != null) componentManager.addComponent(enemy, heroSprite)
-            val transform = Transform(Vector3f(it.toFloat(), it.toFloat(), 0f))
+            val transform = Transform(Vector3f(i.toFloat(), i.toFloat(), 0f))
+            rootTransform?.addChild(transform)
+            if (rootTransform == null) {
+                rootTransform = transform
+            }
             componentManager.addComponent(enemy, transform)
+        }
+        addSystem(RotationSystem(entities[0]))
+    }
+
+    private class RotationSystem(private val entity: Entity) : System() {
+
+        override fun fixedUpdate(deltaTime: Double) {
+            super.fixedUpdate(deltaTime)
+            val transform = componentManager?.getComponent<Transform>(entity) ?: return
+            transform.rotate(0f, 0f, 5f * deltaTime.toFloat())
         }
     }
 

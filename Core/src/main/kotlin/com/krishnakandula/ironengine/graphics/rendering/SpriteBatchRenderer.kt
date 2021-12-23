@@ -1,10 +1,8 @@
 package com.krishnakandula.ironengine.graphics.rendering
 
 import com.krishnakandula.ironengine.ecs.Entity
-import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.ecs.component.Archetype
-import com.krishnakandula.ironengine.ecs.component.ComponentManager
 import com.krishnakandula.ironengine.graphics.Mesh
 import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.VertexAttribute
@@ -21,7 +19,7 @@ import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
 class SpriteBatchRenderer(
     private val shader: Shader,
     private val camera: Camera
-) : System {
+) : System() {
 
     companion object {
         private const val MAX_SPRITES: Int = 5
@@ -49,7 +47,6 @@ class SpriteBatchRenderer(
         )
     }
 
-    private lateinit var componentManager: ComponentManager
     private val requiredComponents: Archetype = Archetype(
         listOf(
             Transform.TYPE_ID,
@@ -92,20 +89,15 @@ class SpriteBatchRenderer(
         )
     }
 
-    override fun onAddedToScene(scene: Scene) {
-        super.onAddedToScene(scene)
-        this.componentManager = scene.componentManager
-    }
-
     override fun update(deltaTime: Double) {
         super.update(deltaTime)
         timesFlushed = 0
 
-        val entities: List<Entity> = componentManager.query(requiredComponents)
+        val entities: List<Entity> = componentManager?.query(requiredComponents) ?: return
         begin()
         for (entity in entities) {
-            val sprite = componentManager.getComponent<Sprite>(entity) ?: continue
-            val transform = componentManager.getComponent<Transform>(entity) ?: continue
+            val sprite = componentManager?.getComponent<Sprite>(entity) ?: continue
+            val transform = componentManager?.getComponent<Transform>(entity) ?: continue
             // TODO: Sort sprites by depth
             draw(sprite, transform)
         }

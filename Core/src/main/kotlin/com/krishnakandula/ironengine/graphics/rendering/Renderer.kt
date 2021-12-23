@@ -4,7 +4,6 @@ import com.krishnakandula.ironengine.ecs.Entity
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.ecs.component.Archetype
-import com.krishnakandula.ironengine.ecs.component.ComponentManager
 import com.krishnakandula.ironengine.graphics.Mesh
 import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.Camera
@@ -16,9 +15,8 @@ import org.lwjgl.opengl.GL11C.glDrawElements
 class Renderer(
     private val camera: Camera,
     private val shader: Shader
-) : System {
+) : System() {
 
-    private lateinit var componentManager: ComponentManager
     private val requiredComponents: Archetype = Archetype(
         listOf(
             Transform.TYPE_ID,
@@ -32,9 +30,18 @@ class Renderer(
         this.componentManager = scene.componentManager
     }
 
+    override fun onRemovedFromScene(scene: Scene) {
+        super.onRemovedFromScene(scene)
+        this.componentManager = null
+    }
+
     override fun update(deltaTime: Double) {
         super.update(deltaTime)
-        val entities: List<Entity> = componentManager.query(requiredComponents)
+
+        val entities: List<Entity> = componentManager?.query(requiredComponents) ?: run {
+            println("Component manager is not set. Unable to start update.")
+            return
+        }
 
         shader.use()
         shader.setMat4("projection", camera.projection)
@@ -49,13 +56,13 @@ class Renderer(
     }
 
     private fun entityWithNoParentTransform(entity: Entity): Boolean {
-        val transform = componentManager.getComponent<Transform>(entity) ?: return false
+        val transform = componentManager?.getComponent<Transform>(entity) ?: return false
         return transform.parent == null
     }
 
     private fun renderEntity(entity: Entity) {
-        val transform = componentManager.getComponent<Transform>(entity) ?: return
-        val mesh = componentManager.getComponent<Mesh>(entity) ?: return
+        val transform = componentManager?.getComponent<Transform>(entity) ?: return
+        val mesh = componentManager?.getComponent<Mesh>(entity) ?: return
 
         mesh.bind()
         shader.setMat4("model", transform.model)

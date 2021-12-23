@@ -1,18 +1,28 @@
 package com.krishnakandula.ironengine.ecs
 
 import com.krishnakandula.ironengine.Disposable
+import com.krishnakandula.ironengine.ecs.component.ComponentManager
 
-interface System : Disposable {
+abstract class System : Disposable {
 
-    fun onAddedToScene(scene: Scene) {
+    protected var componentManager: ComponentManager? = null
+    protected var entityManager: EntityManager? = null
+
+    open fun onAddedToScene(scene: Scene) {
+       componentManager = scene.componentManager
+       entityManager = scene.entityManager
+    }
+
+    open fun onRemovedFromScene(scene: Scene) {
+        componentManager = null
+        entityManager = null
+    }
+
+    open fun update(deltaTime: Double) {
 
     }
 
-    fun update(deltaTime: Double) {
-
-    }
-
-    fun fixedUpdate(deltaTime: Double) {
+    open fun fixedUpdate(deltaTime: Double) {
 
     }
 }

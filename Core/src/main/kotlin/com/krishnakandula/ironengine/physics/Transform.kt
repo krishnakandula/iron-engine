@@ -24,7 +24,7 @@ class Transform(
     direction: Vector3f = Vector3f(0f, 1f, 0f),
     val model: Matrix4f = Matrix4f(),
     parent: Transform? = null,
-    children: MutableSet<Transform> = mutableSetOf(),
+    private val _children: MutableSet<Transform> = mutableSetOf(),
 ) : Component(TYPE_ID) {
 
     companion object {
@@ -64,8 +64,12 @@ class Transform(
             updateModel()
         }
 
-    var children: MutableSet<Transform> = children
+    var children: Set<Transform> = _children
         private set
+
+    init {
+        updateModel()
+    }
 
     fun translate(translation: Vector3f) {
         position.add(translation)
@@ -100,11 +104,13 @@ class Transform(
     }
 
     fun addChild(child: Transform) {
-        children.add(child)
+        _children.add(child)
+        child.parent = this
     }
 
     fun removeChild(child: Transform) {
-        children.remove(child)
+        _children.remove(child)
+        child.parent = null
     }
 
     private fun updateModel() {
