@@ -59,6 +59,13 @@ operator fun Vector3f.times(scalar: Float): Vector3f {
     return result
 }
 
+operator fun Vector3f.times(scalar: Double): Vector3f {
+    val result: Vector3f = this.clone()
+    result *= (scalar.toFloat())
+
+    return result
+}
+
 operator fun Vector3f.timesAssign(scalar: Float) {
     this.x *= scalar
     this.y *= scalar

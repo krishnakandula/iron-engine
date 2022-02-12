@@ -88,6 +88,10 @@ class Transform(
         updateModel()
     }
 
+    fun rotate(rotationVector: Vector3f) {
+        rotate(rotationVector.x, rotationVector.y, rotationVector.z)
+    }
+
     fun setLookRotation(velocity: Vector3f) {
         // calculate roll based off of x and y
         val rollRadians: Float = atan2(velocity.y, velocity.x)

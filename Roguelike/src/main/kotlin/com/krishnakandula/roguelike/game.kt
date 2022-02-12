@@ -1,11 +1,11 @@
 package com.krishnakandula.roguelike
 
 import com.krishnakandula.ironengine.Window
-import com.krishnakandula.ironengine.ecs.Entity
 import com.krishnakandula.ironengine.ecs.Scene
 import com.krishnakandula.ironengine.ecs.SceneManager
 import com.krishnakandula.ironengine.ecs.System
 import com.krishnakandula.ironengine.graphics.Shader
+import com.krishnakandula.ironengine.graphics.camera.Camera
 import com.krishnakandula.ironengine.graphics.camera.OrthographicCamera
 import com.krishnakandula.ironengine.graphics.rendering.SpriteBatchRenderer
 import com.krishnakandula.ironengine.graphics.textures.SpriteSheet
@@ -36,34 +36,57 @@ class StartScene(private val window: Window) : Scene() {
         TextureLoader(),
         JsonHelper()
     )
-    private val cameraSpeed = 10f
 
     init {
-        camera.transform.rotate(0f, 0f, 90f)
-        camera.updateView()
-        shader.setMat4("view", camera.view)
         addSystem(SpriteBatchRenderer(shader, camera))
-        val heroSprite = spriteSheet["Grass.png"]
+        addSystem(CameraMovementSystem(camera, window, cameraSpeed = 50f))
+
+        val grassSprite = spriteSheet["Grass.png"]
         var rootTransform: Transform? = null
-        val entities = entityManager.createEntities(1)
-        entities.forEachIndexed { i, enemy ->
-            if (heroSprite != null) componentManager.addComponent(enemy, heroSprite)
+        val grassEntities = entityManager.createEntities(1)
+        grassEntities.forEachIndexed { i, grass ->
+            if (grassSprite != null){
+                componentManager.addComponent(grass, grassSprite)
+            }
             val transform = Transform(Vector3f(i.toFloat(), i.toFloat(), 0f))
             rootTransform?.addChild(transform)
             if (rootTransform == null) {
                 rootTransform = transform
             }
-            componentManager.addComponent(enemy, transform)
+            componentManager.addComponent(grass, transform)
         }
-//        addSystem(RotationSystem(entities[0]))
+
     }
 
-    private class RotationSystem(private val entity: Entity) : System() {
+    private class CameraMovementSystem(
+        private val camera: Camera,
+        private val window: Window,
+        private val cameraSpeed: Float
+    ) : System() {
 
-        override fun fixedUpdate(deltaTime: Double) {
-            super.fixedUpdate(deltaTime)
-            val transform = componentManager?.getComponent<Transform>(entity) ?: return
-            transform.rotate(0f, 0f, 5f * deltaTime.toFloat())
+        override fun update(deltaTime: Double) {
+            super.update(deltaTime)
+            var cameraTransformDirty = false
+            if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS) {
+                camera.transform.translate(Vector3f(0f, 1f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
+                cameraTransformDirty = true
+            }
+            if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS) {
+                camera.transform.translate(Vector3f(-1f, 0f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
+                cameraTransformDirty = true
+            }
+            if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS) {
+                camera.transform.translate(Vector3f(0f, -1f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
+                cameraTransformDirty = true
+            }
+            if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS) {
+                camera.transform.translate(Vector3f(1f, 0f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
+                cameraTransformDirty = true
+            }
+
+            if (cameraTransformDirty) {
+                camera.updateView()
+            }
         }
     }
 
@@ -72,31 +95,5 @@ class StartScene(private val window: Window) : Scene() {
         camera.updateView()
         shader.setMat4("view", camera.view)
         super.update(deltaTime)
-    }
-
-    override fun fixedUpdate(deltaTime: Double) {
-        super.fixedUpdate(deltaTime)
-        var cameraTransformDirty = false
-        if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_W) == GLFW.GLFW_PRESS) {
-            camera.transform.translate(Vector3f(0f, 1f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
-            cameraTransformDirty = true
-        }
-        if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_A) == GLFW.GLFW_PRESS) {
-            camera.transform.translate(Vector3f(-1f, 0f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
-            cameraTransformDirty = true
-        }
-        if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS) {
-            camera.transform.translate(Vector3f(0f, -1f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
-            cameraTransformDirty = true
-        }
-        if (GLFW.glfwGetKey(window.windowId, GLFW.GLFW_KEY_D) == GLFW.GLFW_PRESS) {
-            camera.transform.translate(Vector3f(1f, 0f, 0f).mul(cameraSpeed * deltaTime.toFloat()))
-            cameraTransformDirty = true
-        }
-
-        if (cameraTransformDirty) {
-            camera.updateView()
-            shader.setMat4("view", camera.view)
-        }
     }
 }
