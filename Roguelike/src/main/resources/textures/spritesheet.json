@@ -1,12 +1,12 @@
 {
 	"frames": [
 		{
-			"filename": "RedTile.png",
+			"filename": "Grass.png",
 			"frame": {
 				"x": 0,
 				"y": 0,
 				"w": 32,
-				"h": 24
+				"h": 32
 			},
 			"rotated": false,
 			"trimmed": false,
@@ -14,11 +14,53 @@
 				"x": 0,
 				"y": 0,
 				"w": 32,
-				"h": 24
+				"h": 32
 			},
 			"sourceSize": {
 				"w": 32,
-				"h": 24
+				"h": 32
+			}
+		},
+		{
+			"filename": "Grass_Enemy.png",
+			"frame": {
+				"x": 32,
+				"y": 0,
+				"w": 32,
+				"h": 32
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 32,
+				"h": 32
+			},
+			"sourceSize": {
+				"w": 32,
+				"h": 32
+			}
+		},
+		{
+			"filename": "longtree.png",
+			"frame": {
+				"x": 64,
+				"y": 0,
+				"w": 128,
+				"h": 128
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 128,
+				"h": 128
+			},
+			"sourceSize": {
+				"w": 128,
+				"h": 128
 			}
 		}
 	],
@@ -28,8 +70,8 @@
 		"image": "spritesheet.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 32,
-			"h": 24
+			"w": 192,
+			"h": 128
 		},
 		"scale": "1"
 	}

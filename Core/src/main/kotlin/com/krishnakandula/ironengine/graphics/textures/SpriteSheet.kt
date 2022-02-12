@@ -29,15 +29,14 @@ class SpriteSheet(
         val spriteSheetWidth = spriteSheetData.meta.size.w.toFloat()
         val spriteSheetHeight = spriteSheetData.meta.size.h.toFloat()
 
-        return Sprite(
-                this,
-                spriteName,
-                x1 = spriteData.frame.x.toFloat() / spriteSheetWidth,
-                x2 = (spriteData.frame.x.toFloat() + spriteData.frame.w - 1) / spriteSheetWidth,
-                y1 = spriteData.frame.y.toFloat() / spriteSheetHeight,
-                y2 = (spriteData.frame.y.toFloat() + spriteData.frame.h - 1) / spriteSheetHeight,
-                width = spriteData.frame.w.toFloat(),
-                height = spriteData.frame.h.toFloat())
+        val x1 = spriteData.frame.x.toFloat() / spriteSheetWidth
+        val x2 = (spriteData.frame.x.toFloat() + spriteData.frame.w) / spriteSheetWidth
+        val y1 = spriteData.frame.y.toFloat() / spriteSheetHeight
+        val y2 = (spriteData.frame.y.toFloat() + spriteData.frame.h) / spriteSheetHeight
+        val width = spriteData.frame.w.toFloat()
+        val height = spriteData.frame.h.toFloat()
+
+        return Sprite(this, spriteName, x1, x2, y1, y2, width, height)
     }
 
     fun getAllSprites(): Collection<SpriteData> = sprites.values

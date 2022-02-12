@@ -105,6 +105,8 @@ class SpriteBatchRenderer(
     }
 
     private fun begin() {
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         shader.use()
         shader.setMat4("projection", camera.projection)
         shader.setMat4("view", camera.view)
@@ -161,6 +163,7 @@ class SpriteBatchRenderer(
     private fun end() {
         flush()
         shader.detach()
+        glDisable(GL_BLEND)
         println("Times flushed: $timesFlushed")
     }
 

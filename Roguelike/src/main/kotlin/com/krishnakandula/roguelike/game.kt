@@ -43,7 +43,7 @@ class StartScene(private val window: Window) : Scene() {
         camera.updateView()
         shader.setMat4("view", camera.view)
         addSystem(SpriteBatchRenderer(shader, camera))
-        val heroSprite = spriteSheet["RedTile.png"]
+        val heroSprite = spriteSheet["Grass.png"]
         var rootTransform: Transform? = null
         val entities = entityManager.createEntities(1)
         entities.forEachIndexed { i, enemy ->
