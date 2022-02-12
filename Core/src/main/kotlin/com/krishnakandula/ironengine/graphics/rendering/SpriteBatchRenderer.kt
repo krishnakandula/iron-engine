@@ -18,12 +18,11 @@ import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
 
 class SpriteBatchRenderer(
         private val shader: Shader,
-        private val camera: Camera
+        private val camera: Camera,
+        private val maxSpritesInBuffer: Int = 100
 ) : System() {
 
     companion object {
-        private const val MAX_SPRITES: Int = 5
-
         /*
            Rect coordinates
 
@@ -60,6 +59,7 @@ class SpriteBatchRenderer(
     private var vertexCount = 0
     private var timesFlushed = 0
     private var lastTexture: Texture? = null
+    private var spritesInBuffer = 0
     private val vertexAttributes: Array<VertexAttribute> = arrayOf(
             // position
             VertexAttribute(
@@ -80,8 +80,8 @@ class SpriteBatchRenderer(
                     pointer = 3L * Float.SIZE_BYTES
             )
     )
-    private val vertices: FloatArray = FloatArray(MAX_SPRITES * (4 * 5))
-    private val indices: IntArray = IntArray(MAX_SPRITES * 6)
+    private val vertices: FloatArray = FloatArray(maxSpritesInBuffer * (4 * 5))
+    private val indices: IntArray = IntArray(maxSpritesInBuffer * 6)
 
     init {
         mesh = Mesh(
@@ -113,6 +113,10 @@ class SpriteBatchRenderer(
     }
 
     private fun draw(sprite: Sprite, transform: Transform) {
+        if (spritesInBuffer == maxSpritesInBuffer) {
+            flush()
+        }
+
         // Calculate sprite's width to height ratio
         val spriteDimensions = Vector3f(
                 sprite.height,
@@ -147,6 +151,7 @@ class SpriteBatchRenderer(
         indices[indexCount++] = rectIndices[5] + vertexCount
 
         vertexCount += 4
+        ++spritesInBuffer
     }
 
     private fun addPos(vec: Vector3f) {
@@ -180,5 +185,6 @@ class SpriteBatchRenderer(
         indexCount = 0
         verticesIndex = 0
         vertexCount = 0
+        spritesInBuffer = 0
     }
 }

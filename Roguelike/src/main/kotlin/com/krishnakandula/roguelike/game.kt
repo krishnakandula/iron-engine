@@ -42,17 +42,19 @@ class StartScene(private val window: Window) : Scene() {
         addSystem(CameraMovementSystem(camera, window, cameraSpeed = 50f))
 
         val grassSprite = spriteSheet["Grass.png"]
-        var rootTransform: Transform? = null
-        val grassEntities = entityManager.createEntities(1)
+        val rootTransform = Transform()
+        val root = entityManager.createEntity()
+        rootTransform.rotate(0f, 0f, 90f)
+        componentManager.addComponent(root, rootTransform)
+
+        val grassEntities = entityManager.createEntities(100)
         grassEntities.forEachIndexed { i, grass ->
             if (grassSprite != null){
                 componentManager.addComponent(grass, grassSprite)
             }
             val transform = Transform(Vector3f(i.toFloat(), i.toFloat(), 0f))
-            rootTransform?.addChild(transform)
-            if (rootTransform == null) {
-                rootTransform = transform
-            }
+            rootTransform.addChild(transform)
+
             componentManager.addComponent(grass, transform)
         }
 
