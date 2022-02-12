@@ -17,8 +17,8 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL15.GL_STATIC_DRAW
 
 class SpriteBatchRenderer(
-    private val shader: Shader,
-    private val camera: Camera
+        private val shader: Shader,
+        private val camera: Camera
 ) : System() {
 
     companion object {
@@ -36,22 +36,22 @@ class SpriteBatchRenderer(
          2(-.5,-.5)  3(.5,-.5)
          */
         private val rect: Array<Vector3f> = arrayOf(
-            Vector3f(-0.5f, 0.5f, 0f),
-            Vector3f(0.5f, 0.5f, 0f),
-            Vector3f(-0.5f, -0.5f, 0f),
-            Vector3f(0.5f, -0.5f, 0f),
+                Vector3f(-0.5f, 0.5f, 0f),
+                Vector3f(0.5f, 0.5f, 0f),
+                Vector3f(-0.5f, -0.5f, 0f),
+                Vector3f(0.5f, -0.5f, 0f),
         )
         private val rectIndices: IntArray = intArrayOf(
-            0, 1, 3,
-            0, 3, 2
+                0, 1, 3,
+                0, 3, 2
         )
     }
 
     private val requiredComponents: Archetype = Archetype(
-        listOf(
-            Transform.TYPE_ID,
-            Sprite.TYPE_ID
-        )
+            listOf(
+                    Transform.TYPE_ID,
+                    Sprite.TYPE_ID
+            )
     )
 
     private val mesh: Mesh
@@ -61,31 +61,31 @@ class SpriteBatchRenderer(
     private var timesFlushed = 0
     private var lastTexture: Texture? = null
     private val vertexAttributes: Array<VertexAttribute> = arrayOf(
-        // position
-        VertexAttribute(
-            index = 0,
-            size = 3,
-            type = GL_FLOAT,
-            normalized = false,
-            stride = 5 * Float.SIZE_BYTES,
-            pointer = 0L * Float.SIZE_BYTES
-        ),
-        // texture coordinates
-        VertexAttribute(
-            index = 1,
-            size = 2,
-            type = GL_FLOAT,
-            normalized = false,
-            stride = 5 * Float.SIZE_BYTES,
-            pointer = 3L * Float.SIZE_BYTES
-        )
+            // position
+            VertexAttribute(
+                    index = 0,
+                    size = 3,
+                    type = GL_FLOAT,
+                    normalized = false,
+                    stride = 5 * Float.SIZE_BYTES,
+                    pointer = 0L * Float.SIZE_BYTES
+            ),
+            // texture coordinates
+            VertexAttribute(
+                    index = 1,
+                    size = 2,
+                    type = GL_FLOAT,
+                    normalized = false,
+                    stride = 5 * Float.SIZE_BYTES,
+                    pointer = 3L * Float.SIZE_BYTES
+            )
     )
     private val vertices: FloatArray = FloatArray(MAX_SPRITES * (4 * 5))
     private val indices: IntArray = IntArray(MAX_SPRITES * 6)
 
     init {
         mesh = Mesh(
-            vertices, indices, *vertexAttributes
+                vertices, indices, *vertexAttributes
         )
     }
 
@@ -111,11 +111,17 @@ class SpriteBatchRenderer(
     }
 
     private fun draw(sprite: Sprite, transform: Transform) {
+        // Calculate sprite's width to height ratio
+        val spriteDimensions = Vector3f(
+                sprite.height,
+                sprite.width,
+                0f)
+
         // pos (3) + texture coordinates(2)
-        val v1 = rect[0].clone() * transform.model
-        val v2 = rect[1].clone() * transform.model
-        val v3 = rect[2].clone() * transform.model
-        val v4 = rect[3].clone() * transform.model
+        val v1 = (rect[0].clone() * spriteDimensions) * transform.model
+        val v2 = (rect[1].clone() * spriteDimensions) * transform.model
+        val v3 = (rect[2].clone() * spriteDimensions) * transform.model
+        val v4 = (rect[3].clone() * spriteDimensions) * transform.model
 
         // Add data for each vertex
         addPos(v1)

@@ -1,12 +1,12 @@
 {
 	"frames": [
 		{
-			"filename": "Grass.png",
+			"filename": "RedTile.png",
 			"frame": {
-				"x": 1,
-				"y": 1,
+				"x": 0,
+				"y": 0,
 				"w": 32,
-				"h": 32
+				"h": 24
 			},
 			"rotated": false,
 			"trimmed": false,
@@ -14,74 +14,11 @@
 				"x": 0,
 				"y": 0,
 				"w": 32,
-				"h": 32
+				"h": 24
 			},
 			"sourceSize": {
 				"w": 32,
-				"h": 32
-			}
-		},
-		{
-			"filename": "Grass_Enemy.png",
-			"frame": {
-				"x": 35,
-				"y": 1,
-				"w": 32,
-				"h": 32
-			},
-			"rotated": false,
-			"trimmed": false,
-			"spriteSourceSize": {
-				"x": 0,
-				"y": 0,
-				"w": 32,
-				"h": 32
-			},
-			"sourceSize": {
-				"w": 32,
-				"h": 32
-			}
-		},
-		{
-			"filename": "Player.png",
-			"frame": {
-				"x": 1,
-				"y": 35,
-				"w": 32,
-				"h": 32
-			},
-			"rotated": false,
-			"trimmed": false,
-			"spriteSourceSize": {
-				"x": 0,
-				"y": 0,
-				"w": 32,
-				"h": 32
-			},
-			"sourceSize": {
-				"w": 32,
-				"h": 32
-			}
-		},
-		{
-			"filename": "ice_cream_knight.png",
-			"frame": {
-				"x": 69,
-				"y": 1,
-				"w": 64,
-				"h": 64
-			},
-			"rotated": false,
-			"trimmed": false,
-			"spriteSourceSize": {
-				"x": 0,
-				"y": 0,
-				"w": 64,
-				"h": 64
-			},
-			"sourceSize": {
-				"w": 64,
-				"h": 64
+				"h": 24
 			}
 		}
 	],
@@ -91,8 +28,8 @@
 		"image": "spritesheet.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 134,
-			"h": 68
+			"w": 32,
+			"h": 24
 		},
 		"scale": "1"
 	}

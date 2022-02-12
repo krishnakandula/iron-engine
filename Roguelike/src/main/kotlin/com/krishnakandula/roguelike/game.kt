@@ -29,7 +29,7 @@ class StartScene(private val window: Window) : Scene() {
         "Roguelike/src/main/resources/shaders/vert.glsl",
         "Roguelike/src/main/resources/shaders/frag.glsl"
     )
-    val camera = OrthographicCamera.new(2000f, 2000f, 100f, 0f, 10f)
+    val camera = OrthographicCamera.new(2000f, 2000f, 10f, 0f, 10f)
     val spriteSheet = SpriteSheet(
         "Roguelike/src/main/resources/textures/",
         "spritesheet",
@@ -43,9 +43,9 @@ class StartScene(private val window: Window) : Scene() {
         camera.updateView()
         shader.setMat4("view", camera.view)
         addSystem(SpriteBatchRenderer(shader, camera))
-        val heroSprite = spriteSheet["Grass.png"]
+        val heroSprite = spriteSheet["RedTile.png"]
         var rootTransform: Transform? = null
-        val entities = entityManager.createEntities(4)
+        val entities = entityManager.createEntities(1)
         entities.forEachIndexed { i, enemy ->
             if (heroSprite != null) componentManager.addComponent(enemy, heroSprite)
             val transform = Transform(Vector3f(i.toFloat(), i.toFloat(), 0f))
@@ -55,7 +55,7 @@ class StartScene(private val window: Window) : Scene() {
             }
             componentManager.addComponent(enemy, transform)
         }
-        addSystem(RotationSystem(entities[0]))
+//        addSystem(RotationSystem(entities[0]))
     }
 
     private class RotationSystem(private val entity: Entity) : System() {
@@ -68,8 +68,9 @@ class StartScene(private val window: Window) : Scene() {
     }
 
     override fun update(deltaTime: Double) {
-        camera.transform.rotate(0f, 0f, 100f * deltaTime.toFloat())
+        camera.transform.rotate(0f, 0f, 1000f * deltaTime.toFloat())
         camera.updateView()
+        shader.setMat4("view", camera.view)
         super.update(deltaTime)
     }
 

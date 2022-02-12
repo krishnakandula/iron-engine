@@ -44,6 +44,14 @@ operator fun Vector3f.times(mat: Matrix4f): Vector3f {
     return this
 }
 
+operator fun Vector3f.times(vec: Vector3f): Vector3f {
+    this.x *= vec.x
+    this.y *= vec.y
+    this.z *= vec.z
+
+    return this
+}
+
 operator fun Vector3f.times(scalar: Float): Vector3f {
     val result: Vector3f = this.clone()
     result *= scalar
