@@ -39,6 +39,8 @@ class StartScene(private val window: Window) : Scene() {
     init {
         addSystem(SpriteBatchRenderer(shader, camera))
         addSystem(CameraMovementSystem(camera, window, cameraSpeed = 50f))
+        camera.transform.translate(Vector3f(0f, 64f, 0f).toIsometric().isoCoords)
+        camera.updateView()
 
         val grassSprite = spriteSheet["Grass.png"]
         val rootTransform = Transform()
@@ -60,6 +62,11 @@ class StartScene(private val window: Window) : Scene() {
                 rootTransform.addChild(grassTileTransform)
             }
         }
+
+        val dudeSprite = spriteSheet["Dude.png"] ?: throw NullPointerException()
+        val dude = entityManager.createEntity()
+        componentManager.addComponent(dude, Transform(Vector3f(16f, 16f, 0f).toIsometric().isoCoords))
+        componentManager.addComponent(dude, dudeSprite)
     }
 
     fun grassEntity(spriteName: String, position: Vector3f): Entity {

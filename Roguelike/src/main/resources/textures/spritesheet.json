@@ -1,7 +1,7 @@
 {
 	"frames": [
 		{
-			"filename": "Grass.png",
+			"filename": "Dude.png",
 			"frame": {
 				"x": 0,
 				"y": 0,
@@ -22,7 +22,7 @@
 			}
 		},
 		{
-			"filename": "Grass_Enemy.png",
+			"filename": "Grass.png",
 			"frame": {
 				"x": 32,
 				"y": 0,
@@ -43,24 +43,45 @@
 			}
 		},
 		{
-			"filename": "longtree.png",
+			"filename": "Grass_Enemy.png",
 			"frame": {
-				"x": 64,
-				"y": 0,
-				"w": 128,
-				"h": 128
+				"x": 0,
+				"y": 32,
+				"w": 32,
+				"h": 32
 			},
 			"rotated": false,
 			"trimmed": false,
 			"spriteSourceSize": {
 				"x": 0,
 				"y": 0,
-				"w": 128,
-				"h": 128
+				"w": 32,
+				"h": 32
 			},
 			"sourceSize": {
-				"w": 128,
-				"h": 128
+				"w": 32,
+				"h": 32
+			}
+		},
+		{
+			"filename": "bad_sprite_dude.png",
+			"frame": {
+				"x": 64,
+				"y": 0,
+				"w": 32,
+				"h": 64
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 32,
+				"h": 64
+			},
+			"sourceSize": {
+				"w": 32,
+				"h": 64
 			}
 		}
 	],
@@ -70,8 +91,8 @@
 		"image": "spritesheet.png",
 		"format": "RGBA8888",
 		"size": {
-			"w": 192,
-			"h": 128
+			"w": 96,
+			"h": 64
 		},
 		"scale": "1"
 	}
