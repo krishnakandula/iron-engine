@@ -10,7 +10,6 @@ import com.krishnakandula.ironengine.graphics.camera.Camera
 import com.krishnakandula.ironengine.graphics.textures.Sprite
 import com.krishnakandula.ironengine.graphics.textures.Texture
 import com.krishnakandula.ironengine.physics.Transform
-import com.krishnakandula.ironengine.utils.clone
 import com.krishnakandula.ironengine.utils.times
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11.*
@@ -124,10 +123,10 @@ class SpriteBatchRenderer(
                 0f)
 
         // pos (3) + texture coordinates(2)
-        val v1 = (rect[0].clone() * spriteDimensions) * transform.model
-        val v2 = (rect[1].clone() * spriteDimensions) * transform.model
-        val v3 = (rect[2].clone() * spriteDimensions) * transform.model
-        val v4 = (rect[3].clone() * spriteDimensions) * transform.model
+        val v1 = (rect[0] * spriteDimensions) * transform.model
+        val v2 = (rect[1] * spriteDimensions) * transform.model
+        val v3 = (rect[2] * spriteDimensions) * transform.model
+        val v4 = (rect[3] * spriteDimensions) * transform.model
 
         // Add data for each vertex
         addPos(v1)

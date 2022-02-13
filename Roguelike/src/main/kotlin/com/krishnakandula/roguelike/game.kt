@@ -1,9 +1,7 @@
 package com.krishnakandula.roguelike
 
 import com.krishnakandula.ironengine.Window
-import com.krishnakandula.ironengine.ecs.Scene
-import com.krishnakandula.ironengine.ecs.SceneManager
-import com.krishnakandula.ironengine.ecs.System
+import com.krishnakandula.ironengine.ecs.*
 import com.krishnakandula.ironengine.graphics.Shader
 import com.krishnakandula.ironengine.graphics.camera.Camera
 import com.krishnakandula.ironengine.graphics.camera.OrthographicCamera
@@ -12,6 +10,7 @@ import com.krishnakandula.ironengine.graphics.textures.SpriteSheet
 import com.krishnakandula.ironengine.graphics.textures.TextureLoader
 import com.krishnakandula.ironengine.physics.Transform
 import com.krishnakandula.ironengine.utils.JsonHelper
+import com.krishnakandula.ironengine.utils.toIsometric
 import org.joml.Vector3f
 import org.lwjgl.glfw.GLFW
 
@@ -47,17 +46,31 @@ class StartScene(private val window: Window) : Scene() {
         rootTransform.rotate(0f, 0f, 90f)
         componentManager.addComponent(root, rootTransform)
 
-        val grassEntities = entityManager.createEntities(100)
-        grassEntities.forEachIndexed { i, grass ->
-            if (grassSprite != null){
-                componentManager.addComponent(grass, grassSprite)
+        // Generate grass tiles
+        (0..2).forEach { row ->
+            (0..2).forEach cols@{ col ->
+                val position = Vector3f(
+                    (row * 16).toFloat(),
+                    (col * 16).toFloat(),
+                    0f).toIsometric().isoCoords
+                val grassTile = grassEntity(
+                    "Grass.png", position)
+                val grassTileTransform = componentManager.getComponent<Transform>(grassTile) ?: return@cols
+
+                rootTransform.addChild(grassTileTransform)
             }
-            val transform = Transform(Vector3f(i.toFloat(), i.toFloat(), 0f))
-            rootTransform.addChild(transform)
-
-            componentManager.addComponent(grass, transform)
         }
+    }
 
+    fun grassEntity(spriteName: String, position: Vector3f): Entity {
+        val grass = entityManager.createEntity()
+        val sprite = spriteSheet[spriteName]
+            ?: // TODO: Change this exception to a SpriteNotFoundException
+            throw NullPointerException("Can't find sprite with name $spriteName")
+        componentManager.addComponent(grass, sprite)
+        componentManager.addComponent(grass, Transform(position))
+
+        return grass
     }
 
     private class CameraMovementSystem(
